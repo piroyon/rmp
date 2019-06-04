@@ -119,5 +119,11 @@
 	  <artifactId>scijava-common</artifactId>
 	  <type>jar</type>
 	 </dependency>
+	 <dependency>
+	  <groupId>fiji</groupId>
+	  <artifactId>fiji-lib</artifactId>
+	  <version>20100908</version>
+	  <type>jar</type>
+	 </dependency>
 	</dependencies>
 </project>

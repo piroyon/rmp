@@ -2,6 +2,7 @@ package com.hiroyo.imagej;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.ImageCanvas;
 import ij.gui.GenericDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
@@ -45,7 +46,8 @@ import ij.measure.*;
 
 public class Rmp_prototype implements PlugInFilter {
 
-	ImagePlus imp, impRemaining, impRemoved;
+	ImagePlus imp, impRemaining, impRemoved, seimage;
+        ImageCanvas ic;
 	ImageStack imsRemoved;
 	int pixelCount,pixelThreshold,i,j,w,h;
 	int nIterations;
@@ -73,9 +75,11 @@ public class Rmp_prototype implements PlugInFilter {
 
         @Override
 	public void run(ImageProcessor ip) {
-
-		// Get details
-		getDetails();
+                openSE();
+		String[] imageList = new String[2];
+                imageList[0] = imp.getTitle();
+                imageList[1] = seimage.getTitle();
+		getDetails(imageList);
 		if(canceled) return;
 
 		// Get information of Stack
@@ -183,19 +187,35 @@ public class Rmp_prototype implements PlugInFilter {
 		impRemaining.show();
 		if (displayRem) impRemoved.show();
 	}
+        
+        public void openSE () {
+		OpenDialog od = new OpenDialog("Select SE");
+		String directory = od.getDirectory();
+		String name = od.getFileName();
+		String path = directory + name;
+		seimage = IJ.openImage(path);
+		seimage.show();
+                //ic = imp.getCanvas();  //ImageCanvasにImageを渡す
+	}
 
 	void showAbout() {
 		IJ.showMessage("About binary filter...",
 			"Blah\n" );
 	}
 
-	void getDetails(){
-		GenericDialog gd = new GenericDialog("Binary filters..");
-        gd.addNumericField("Set count (1-8):",4,0);
+	void getDetails(String[] imageList){
+            GenericDialog gd;
+            gd = new GenericDialog("rmp prototype..");
+            gd.addChoice("Object image:",imageList,imageList[0]);
+            gd.addChoice("Structuring element:",imageList,imageList[1]);
+            gd.addCheckbox("Background is white:",true);
+
+		/*return result;		
+                gd.addNumericField("Set count (1-8):",4,0);
 		gd.addNumericField("Iterations (1-25): ",1,0);
         		gd.addChoice("Do", items, items[Choice]);
 		gd.addCheckbox("Display residual image ", displayRem);
-		gd.addCheckbox("Display Results ", display);
+		gd.addCheckbox("Display Results ", display);*/
 
         gd.showDialog();
 		if(gd.wasCanceled()){
@@ -305,7 +325,7 @@ public class Rmp_prototype implements PlugInFilter {
 
             // start ImageJ
                 final ImageJ imagej = new ImageJ();
-                OpenDialog od = new OpenDialog("Slect...");
+                OpenDialog od = new OpenDialog("Select...", null);
                 String directory = od.getDirectory();
 		String name = od.getFileName();
 		String path = directory + name;
