@@ -194,6 +194,7 @@ public class Rmp_prototype implements PlugInFilter {
 		String name = od.getFileName();
 		String path = directory + name;
 		seimage = IJ.openImage(path);
+                int setype = seimage.getType();
 		seimage.show();
                 //ic = imp.getCanvas();  //ImageCanvasにImageを渡す
 	}
