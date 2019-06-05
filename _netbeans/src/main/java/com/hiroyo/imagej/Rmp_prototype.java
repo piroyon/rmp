@@ -46,7 +46,7 @@ import ij.measure.*;
 
 public class Rmp_prototype implements PlugInFilter {
 
-	ImagePlus imp, impRemaining, impRemoved, seimage;
+	ImagePlus targetImp, impRemaining, impRemoved, seImp;
         ImageCanvas ic;
 	ImageStack imsRemoved;
 	int pixelCount,pixelThreshold,i,j,w,h;
@@ -69,7 +69,7 @@ public class Rmp_prototype implements PlugInFilter {
 	public int setup(String arg, ImagePlus imp) {
 		if (arg.equals("about"))
 			{showAbout(); return DONE;}
-		this.imp = imp;
+		this.targetImp = imp;
 		return DOES_8G;
 	}
 
@@ -77,14 +77,25 @@ public class Rmp_prototype implements PlugInFilter {
 	public void run(ImageProcessor ip) {
                 openSE();
 		String[] imageList = new String[2];
-                imageList[0] = imp.getTitle();
-                imageList[1] = seimage.getTitle();
-		getDetails(imageList);
-		if(canceled) return;
+                imageList[0] = targetImp.getTitle();
+                imageList[1] = seImp.getTitle();
+		GenericDialog gd = getDetails(imageList);
+                gd.showDialog();
+                if (gd.wasCanceled()) return;
+		//if(canceled) return;
+                //String objectName = gd.getNextChoice();
+		//String seName = gd.getNextChoice();
+		boolean bgWhite = gd.getNextBoolean();
 
+		//ImagePlus object = ij.WindowManager.getImage(objectName);
+		//ImagePlus seImage = ij.WindowManager.getImage(seName);
+		StructElement se = new StructElement(seImp, bgWhite);
+                
+                ImagePlus e = Morphology.open(targetImp,se);
+                e.show();
 		// Get information of Stack
-		int nSlices = imp.getStackSize();
-		ImageStack stack = imp.getStack();
+		int nSlices = targetImp.getStackSize();
+		ImageStack stack = targetImp.getStack();
 		w = stack.getWidth();
 		h = stack.getHeight();
 		imageSize=w*h;
@@ -193,9 +204,9 @@ public class Rmp_prototype implements PlugInFilter {
 		String directory = od.getDirectory();
 		String name = od.getFileName();
 		String path = directory + name;
-		seimage = IJ.openImage(path);
-                int setype = seimage.getType();
-		seimage.show();
+		seImp = IJ.openImage(path);
+                int setype = seImp.getType();
+		seImp.show();
                 //ic = imp.getCanvas();  //ImageCanvasにImageを渡す
 	}
 
@@ -204,7 +215,7 @@ public class Rmp_prototype implements PlugInFilter {
 			"Blah\n" );
 	}
 
-	void getDetails(String[] imageList){
+	private GenericDialog getDetails(String[] imageList){
             GenericDialog gd;
             gd = new GenericDialog("rmp prototype..");
             gd.addChoice("Object image:",imageList,imageList[0]);
@@ -218,14 +229,14 @@ public class Rmp_prototype implements PlugInFilter {
 		gd.addCheckbox("Display residual image ", displayRem);
 		gd.addCheckbox("Display Results ", display);*/
 
-        gd.showDialog();
+        /*gd.showDialog();
 		if(gd.wasCanceled()){
         		canceled = true;
-         		return;
-        }
+         		//return;
+        }*/
 
 		//Correct the number of required neighborhood black pixels
-        pixelCount = (int)gd.getNextNumber();
+        /*pixelCount = (int)gd.getNextNumber();
 		pixelThreshold = (2040-255*pixelCount);
 		pixelThreshold = (255*pixelCount);
 		nIterations = (int)gd.getNextNumber();
@@ -242,7 +253,8 @@ public class Rmp_prototype implements PlugInFilter {
 		}
  		Choice = gd.getNextChoiceIndex();
 	    	displayRem=gd.getNextBoolean();
-		display = gd.getNextBoolean();
+		display = gd.getNextBoolean();*/
+            return gd;
     	}
 
 	void writeResults(){
