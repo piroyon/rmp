@@ -17,7 +17,7 @@ import java.io.*;
  @version 0.1
  *
  */
-public final class StructElement{
+public final class StructuringElement{
 /*
  * Constants and properties.
  */
@@ -28,7 +28,7 @@ public final class StructElement{
 	public static final String LINE = "line";
 	private int bgValue = 255;
 
-	private ImagePlus seImage;
+	private ImagePlus seimp;
 	private ObjectWindow object;
 
 /*
@@ -39,7 +39,7 @@ public final class StructElement{
 	 * Structuring element with arbitrary shape: constructor takes ImagePlus which defines neighborhood with
 	 * black and white pixels.
 	 *
-	 @param imp ImagePlus defining the structuring element.  Auto-thresholded so only maximum pixels (255) are
+	 @param seimp ImagePlus defining the structuring element.  Auto-thresholded so only maximum pixels (255) are
 	           seen as white.
 	 *
 	 @param bgWhite Defines whether the background is white (true) or black (false).
@@ -47,27 +47,26 @@ public final class StructElement{
 	 @return A StructElement based on the structure.
 	 *
 	 */
-	public StructElement(ImagePlus imp, boolean bgWhite) {
-
-		setBgWhite(bgWhite);
-		try {		
+	public StructuringElement(ImagePlus seimp, boolean bgWhite) {
+            setBgWhite(bgWhite);
+            try {		
 		    // Ensure we have an image with odd width and height.
-    		if ( (imp.getWidth() % 2 == 0) || (imp.getHeight() % 2 == 0) ) {
-	    		throw new Exception("Structuring elements must have odd-numbered height and width!");
+    		if ( (seimp.getWidth() % 2 == 0) || (seimp.getHeight() % 2 == 0) ) {
+	    		throw new Exception("Structuring elements must have odd height and width");
 		}
 
 		// Make our ImagePlus contents an 8-bit image.
-		seImage = new ImagePlus("structuring element", imp.getProcessor());
-		ImageConverter ic = new ImageConverter(seImage);
+		//seproc = new ImagePlus("structuring element", seimp.getProcessor());
+		ImageConverter ic = new ImageConverter(seimp);
 		ic.convertToGray8();
 
 		// Then threshold so only 255 pixels are white.  This 
 		// should already be the case, but let's make sure, shall we?
-		seImage.getProcessor().threshold(254);
-		}
-		catch(Exception e) {
+		seimp.getProcessor().threshold(254);
+            }
+            catch(Exception e) {
 			//e.printStackTrace();
-		}
+            }
 	}
 
 	/**
@@ -80,7 +79,7 @@ public final class StructElement{
 	 //@return Square or Circle StructElement.
 	 *
 	 */
-	public StructElement(String name, int size, boolean bgWhite) {
+	public StructuringElement(String name, int size, boolean bgWhite) {
 		setBgWhite(bgWhite);
 		try {
 
@@ -91,7 +90,7 @@ public final class StructElement{
 			    if (size % 2 == 0) {
 				    throw new Exception("Size of structuring element must be an odd number of pixels!");
     			}
-	    		seImage = makeRect(size, size); 
+	    		seimp = makeRect(size, size); 
 		    } else {
 			    throw new Exception("Unknown type of structuring element!");
     		}
@@ -112,7 +111,7 @@ public final class StructElement{
 	 @return A rectangular, ring-shaped or line-shaped structuring element.
 	 *
 	 */
-	public StructElement(String name, int size1, int size2, boolean bgWhite) {
+	public StructuringElement(String name, int size1, int size2, boolean bgWhite) {
 		setBgWhite(bgWhite);
 		try {
             /*if (name.equalsIgnoreCase(RING)) {
@@ -122,13 +121,13 @@ public final class StructElement{
                 if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
                     throw new Exception("Structuring elements must have odd-numbered height and width!");
                 }
-                seImage = makeRect(size1, size2); 
+                seimp = makeRect(size1, size2); 
             } else if (name.equalsIgnoreCase(LINE)) {
         
                 //	if (size1 % 2 == 0) {
                 //		throw new Exception("Size of structuring element must be an odd number of pixels!");
                 //	}
-                    seImage = makeLine(size1, size2); 
+                    seimp = makeLine(size1, size2); 
             } else {
                     throw new Exception("Unknown type of structuring element!");
             }
@@ -252,15 +251,15 @@ public final class StructElement{
 	public void setBgWhite(boolean bgWhite) {
 		if (!bgWhite) {
                     if (bgValue!=0) {
-                        if (seImage!=null) {
-                            seImage.getProcessor().invert();
+                        if (seimp!=null) {
+                            seimp.getProcessor().invert();
                         }
                     }
                     bgValue=0;
                 } else {
                     if (bgValue!=255) {
-                        if (seImage!=null) {
-                            seImage.getProcessor().invert();
+                        if (seimp!=null) {
+                            seimp.getProcessor().invert();
                         }
                     }
                     bgValue=255;
@@ -293,7 +292,7 @@ public final class StructElement{
 	 */
 	public void setObject(ImagePlus imp, boolean symmetric) {
 		//object = new ObjectWindow(imp, this, bgValue, symmetric);
-                object = new ObjectWindow(imp, seImage, bgValue, symmetric);
+                object = new ObjectWindow(imp, this, bgValue, symmetric);
 	}
 
 	/**
@@ -310,8 +309,8 @@ public final class StructElement{
 	 @return The size of the structuring element's foreground in pixels.
 	 */
 	public int getSize() {
-		int[][] se = seImage.getProcessor().getIntArray();
-		int sewidth=seImage.getWidth(); int seheight=seImage.getHeight();
+		int[][] se = seimp.getProcessor().getIntArray();
+		int sewidth=seimp.getWidth(); int seheight=seimp.getHeight();
 		int counter=0;
 
 		for (int x=0; x<sewidth; x++) {
@@ -331,7 +330,7 @@ public final class StructElement{
 	 */
 	public void printStructure(PrintStream pr) {
 
-            int[][] pixels = seImage.getProcessor().getIntArray();
+            int[][] pixels = seimp.getProcessor().getIntArray();
             for (int[] pixel : pixels) {
                 for (int x = 0; x < pixel.length; x++) {
                     if (pixel[x] == bgValue) {
@@ -369,7 +368,7 @@ public final class StructElement{
  *
  @author Adam DeConinck
  @version 0.1
- */
+
 class ObjectWindow {
 
 	private final int[][] se;
@@ -385,12 +384,14 @@ class ObjectWindow {
 	 @param s Structuring element used to generate the windows.
 	 @param bg Background value.
 	 @param sym Determines if boundary conditions are symmetric.
-	 */
+	 **/
+/**
 	//public ObjectWindow(ImagePlus im, StructElement s, int bg, boolean sym) {
         public ObjectWindow(ImagePlus im, ImagePlus s, int bg, boolean sym) {
+                object = im.getProcessor().getIntArray();
 		//se = s.getImage.getProcessor().getIntArray();
                 se = s.getProcessor().getIntArray();
-		object = im.getProcessor().getIntArray();
+		
 
 		bgValue = bg;
 
@@ -416,11 +417,12 @@ class ObjectWindow {
 		}
 		//size = s.getSize();
 	}
-
+**/
 	/**
 	 * Produce a list of pixel values which are overlapped by the structuring element when centered at a given
 	 * coordinate.
 	 */
+/**
 	public int[] view(int x0, int y0) {
 
 		int[] result = new int[size];
@@ -487,3 +489,4 @@ class ObjectWindow {
 		return result;	
 	}
 }
+**/

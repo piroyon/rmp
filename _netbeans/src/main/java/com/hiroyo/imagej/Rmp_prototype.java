@@ -10,9 +10,15 @@ import ij.*;
 import ij.io.OpenDialog;
 import ij.process.*;
 import ij.measure.*;
+import java.awt.*;
+import java.awt.FlowLayout;
+import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-/**	This plugin performs erosion, dilation, opening and closing of binary images.
+/**	This plugin performs rmp.
 	The plugin requires 8-bits binary images (Process/Binary/treshold)
+        * 
 	The number of neighborhood  pixels (between 1 and 8) and itearatiosn (1-25) can be choosen at will.
 	The plugin corresponds to the Binary/Set Count option in NIH and Scion Image.
 
@@ -57,8 +63,10 @@ public class Rmp_prototype implements PlugInFilter {
 	int p1,p2,p3,p4,p5,p6,p7,p8,p9;
 	int nRemoved,rPixels;
 	int blackPixels, imageSize;
+        private static String sename;
 
-	private static final String[] items = {"Erode","Dilate","Open","Close"};
+	//private static final String[] items = {"Erode","Dilate","Open","Close"};
+        private static final String[] items = {"From file","Set Square","Set Rect","Set Oval"};
 	protected static final int ERODE=0,DILATE=1,OPEN=2,CLOSE=3;
 	protected static int Choice;
 
@@ -75,10 +83,10 @@ public class Rmp_prototype implements PlugInFilter {
 
         @Override
 	public void run(ImageProcessor ip) {
-                openSE();
-		String[] imageList = new String[2];
+                //openSE();
+		String[] imageList = new String[1];
                 imageList[0] = targetImp.getTitle();
-                imageList[1] = seImp.getTitle();
+                //imageList[1] = seImp.getTitle();
 		GenericDialog gd = getDetails(imageList);
                 gd.showDialog();
                 if (gd.wasCanceled()) return;
@@ -89,7 +97,7 @@ public class Rmp_prototype implements PlugInFilter {
 
 		//ImagePlus object = ij.WindowManager.getImage(objectName);
 		//ImagePlus seImage = ij.WindowManager.getImage(seName);
-		StructElement se = new StructElement(seImp, bgWhite);
+		StructuringElement se = new StructuringElement(seImp, bgWhite);
                 
                 ImagePlus e = Morphology.open(targetImp,se);
                 e.show();
@@ -216,12 +224,34 @@ public class Rmp_prototype implements PlugInFilter {
 	}
 
 	private GenericDialog getDetails(String[] imageList){
-            GenericDialog gd;
-            gd = new GenericDialog("rmp prototype..");
-            gd.addChoice("Object image:",imageList,imageList[0]);
-            gd.addChoice("Structuring element:",imageList,imageList[1]);
+            final GenericDialog gd;
+            gd = new GenericDialog("rmp prototype...");
+            final Panel pnl = new Panel(new FlowLayout());
+            final Button btn = new Button("Open Structuring Element..");
+            pnl.add(btn);
+            btn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    final OpenDialog od = new OpenDialog("Select SE");
+                    String directory = od.getDirectory();
+                    sename = od.getFileName();
+                    String path = directory + sename;
+                    seImp = IJ.openImage(path);
+                    seImp.show();
+                }
+            });
+            gd.addChoice("Object Image:",imageList,imageList[0]);
+            gd.addRadioButtonGroup("Structuring Element", items, 1, 4, "From file");
+            gd.addPanel(pnl);
+            //if(sename != null) {
+             //   gd.addMessage(sename);
+            //}
+            //gd.addChoice("From file...",imageList,imageList[1]);
+            gd.addNumericField("Size1 (Square or (Rect or Oval Side1)", 3, 0, 2, "px");
+            gd.addToSameRow();
+            gd.addNumericField("Size2 (Rect or Oval Side2)", 5, 0, 2, "px");
             gd.addCheckbox("Background is white:",true);
-
+  
 		/*return result;		
                 gd.addNumericField("Set count (1-8):",4,0);
 		gd.addNumericField("Iterations (1-25): ",1,0);

@@ -3,7 +3,7 @@ package com.hiroyo.imagej;
 import ij.*;
 import ij.process.*;
 import java.util.Arrays;
-//import org.ajdecon.morphology.StructElement;
+//import org.ajdecon.morphology.StructuringElement;
 
 /**
  * Morphology. Utility class which performs image processing operations from mathematical morphology
@@ -29,7 +29,7 @@ public class Morphology {
 	 *
 	 @param imp   An ImagePlus object containing the image to be operated on.
 	 *
-	 @param se    StructElement containing the shape of the neighborhood.
+	 @param se    StructuringElement containing the shape of the neighborhood.
 	 *
 	 @param perc Percentile to be used.
 	 *
@@ -38,7 +38,7 @@ public class Morphology {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus percentileFilter(ImagePlus imp, StructElement se,
+	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se,
 			double perc, boolean symmetric) {
 
 		ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
@@ -65,7 +65,7 @@ public class Morphology {
 	 * Assume symmetric bc if not supplied.
 	 *
 	 */
-	public static ImagePlus percentileFilter(ImagePlus imp, StructElement se,
+	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se,
 			double perc) {
 		return percentileFilter(imp, se, perc, true);
 	}
@@ -91,7 +91,7 @@ public class Morphology {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus erode(ImagePlus imp, StructElement se) {
+	public static ImagePlus erode(ImagePlus imp, StructuringElement se) {
 		if (se.isBgWhite()) {
 			return percentileFilter(imp, se, 100.0);
 		} else {
@@ -121,7 +121,7 @@ public class Morphology {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus dilate(ImagePlus imp, StructElement se) {
+	public static ImagePlus dilate(ImagePlus imp, StructuringElement se) {
 		if (se.isBgWhite()) {
 			return percentileFilter(imp, se, 0.0);
 		} else {
@@ -134,7 +134,7 @@ public class Morphology {
 	 * by a dilation.
 	 *
 	 */
-	public static ImagePlus open(ImagePlus imp, StructElement se) {
+	public static ImagePlus open(ImagePlus imp, StructuringElement se) {
 		return dilate( erode( imp, se ), se);
 	}
 
@@ -143,7 +143,7 @@ public class Morphology {
 	 * an erosion.
 	 *
 	 */
-	public static ImagePlus close(ImagePlus imp, StructElement se) {
+	public static ImagePlus close(ImagePlus imp, StructuringElement se) {
 		return erode( dilate( imp, se), se );
 	}
 
@@ -151,7 +151,7 @@ public class Morphology {
 	 * Morphological gradient.  Difference between the dilation and the erosion.
 	 *
 	 */
-	public static ImagePlus gradient(ImagePlus imp, StructElement se) {
+	public static ImagePlus gradient(ImagePlus imp, StructuringElement se) {
 		ImagePlus d = dilate(imp,se);
 		ImagePlus e = erode(imp,se);
 
@@ -179,7 +179,7 @@ public class Morphology {
 	 *
 	 */
 	public static ImagePlus hitOrMiss(ImagePlus imp, 
-			StructElement fse, StructElement bse) {
+			StructuringElement fse, StructuringElement bse) {
 
 		/* Note that both fg and bg are returned from erode, so are 
 		 * guaranteed to be 8-bit images with ByteProcessors. */
@@ -205,7 +205,7 @@ public class Morphology {
 	 * Black corresponds to difference between closing and image.
 	 *
 	 */
-	public static ImagePlus topHat(ImagePlus imp, StructElement se, boolean white) {
+	public static ImagePlus topHat(ImagePlus imp, StructuringElement se, boolean white) {
 
 		int width = imp.getWidth();
 		int height = imp.getHeight();
