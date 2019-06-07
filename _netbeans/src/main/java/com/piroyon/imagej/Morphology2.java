@@ -17,8 +17,13 @@ import java.util.Arrays;
  @version 0.1
  *
  */
-public class Morphology {
-
+public class Morphology2 {
+        private final int[][] searray;
+	private final int[][] imarray;
+	int bgValue;
+	private final int sewidth, seheight, width, height, dx, dy;
+        private int fgsize;
+	boolean symmetric;
 	/**
 	 * Percentile filter. Sets each pixel equal to the value of the pth
 	 * percentile of its neighborhood.  Neighborhood is defined using a 
@@ -38,6 +43,38 @@ public class Morphology {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
+        public static ImagePlus doFilter(ImagePlus imp, StructuringElement se, boolean symmetric){
+		// Eroding
+                imarray = im.getProcessor().getIntArray();
+                searray = se.seimp.getProcessor().getIntArray();
+		for (j=0;j<nIterations;j++){
+                    for (int y=1; y<(h-1); y++) {
+			for (int x=1; x<(w-1); x++) {
+                            index=x+y*w;
+                            if(pixels[index] == 0){
+                            // Adding values around index
+                            p1=(pixels[index-w-1]&0xff); 	p2=(pixels[index-w]&0xff); 	p3=(pixels[index-w+1]&0xff);
+                            p4=(pixels[index-1]&0xff); 		p5=(pixels[index]&0xff);	p6=(pixels[index+1]&0xff);
+                            p7=(pixels[index+w-1]&0xff);	p8=(pixels[index+w]&0xff);	p9=(pixels[index+w+1]&0xff);
+                            sum =  p1 + p2 + p3 + p4 + p6 + p7 + p8+  p9;
+                            // Check if sum is higher than threshold
+                            if(sum >= pixelThreshold){remain[index] = (byte)255;}
+				else {remain[index]=0;}
+                            }
+				else {remain[index]=(byte)255;}
+                        }
+                    }
+                    //PASS THE VALUES IN REMAIN TO PIXELS FOR NEXT ITERATION
+                    for (int y=1; y<(h-1); y++) {
+				for (int x=1; x<(w-1); x++) {
+					index=x+y*w;
+					pixels[index]=remain[index];
+				}
+			}
+
+		}
+	}
+        
 	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se, double perc, boolean symmetric) {
 
 		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
@@ -46,7 +83,8 @@ public class Morphology {
 
 		int width = out.getWidth();
 		int height = out.getHeight();
-
+                int dx = se.seimp.getWidth() / 2;
+                int dy = se.seimp.getHeight() / 2;
 		// Send image to structuring element for speed and set symmetry.
 		se.setObject(imp, symmetric);
 		for(int x=0; x<width; x++) {

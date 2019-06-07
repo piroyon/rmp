@@ -257,12 +257,7 @@ public class Rmp_prototype implements PlugInFilter {
             //gd.addChoice("Object Image:",imageList,imageList[0]);
             gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
             gd.addPanel(pnl);
-            //gd.addToSameRow();
-            //if(sename != null) {
-             //   gd.addMessage(sename);
-            //}
-            gd.addChoice("or Select SE from opened...",imageList,imageList[0]);
-            
+            gd.addChoice("or Select SE from opened...",imageList,imageList[0]);     
             gd.addNumericField("Size1: (SQUARE or (RECT or OVAL Side1)", 3, 0, 2, "px,");
             //gd.addToSameRow();
             gd.addNumericField("Size2: (RECT or OVAL Side2)", 7, 0, 2, "px");
@@ -275,12 +270,6 @@ public class Rmp_prototype implements PlugInFilter {
         		gd.addChoice("Do", items, items[Choice]);
 		gd.addCheckbox("Display residual image ", displayRem);
 		gd.addCheckbox("Display Results ", display);*/
-
-        /*gd.showDialog();
-		if(gd.wasCanceled()){
-        		canceled = true;
-         		//return;
-        }*/
 
 		//Correct the number of required neighborhood black pixels
         /*pixelCount = (int)gd.getNextNumber();
@@ -345,37 +334,7 @@ public class Rmp_prototype implements PlugInFilter {
 	}
 
 
-
-	void doFilter(){
-		// Eroding
-		for (j=0;j<nIterations;j++){
-			for (int y=1; y<(h-1); y++) {
-				for (int x=1; x<(w-1); x++) {
-					index=x+y*w;
-					if(pixels[index] == 0){
-						// Adding values around index
-						p1=(pixels[index-w-1]&0xff); 	p2=(pixels[index-w]&0xff); 	p3=(pixels[index-w+1]&0xff);
-						p4=(pixels[index-1]&0xff); 		p5=(pixels[index]&0xff);	p6=(pixels[index+1]&0xff);
-						p7=(pixels[index+w-1]&0xff);	p8=(pixels[index+w]&0xff);	p9=(pixels[index+w+1]&0xff);
-						sum =  p1 + p2 + p3 + p4 + p6 + p7 + p8+  p9;
-						// Check if sum is higher than threshold
-						if(sum >= pixelThreshold){remain[index] = (byte)255;}
-						else {remain[index]=0;}
-					}
-					else {remain[index]=(byte)255;}
-				}
-			}
-			//PASS THE VALUES IN REMAIN TO PIXELS FOR NEXT ITERATION
-			for (int y=1; y<(h-1); y++) {
-				for (int x=1; x<(w-1); x++) {
-					index=x+y*w;
-					pixels[index]=remain[index];
-				}
-			}
-
-		}
-	}
-        
+	
         //public void ckOdd(int size) throws ApplicationException {
         public boolean ckOdd(int size) {
             switch(size % 2) {

@@ -63,7 +63,7 @@ public class ObjectWindow {
 		for (int x=-dx; x<=dx; x++) {
                     for (int y=-dx; y<=dx; y++) {
 			// Check if we are in a SE foreground pixel.
-			if (searray[x+dx][y+dy]!=bgValue) {
+			if (searray[x+dx][y+dy] != bgValue) {
                             // Coordinates in the object image.
                             int xc = x0+x; int yc = y0+y;
                             // Check x boundary conditions.
@@ -84,38 +84,37 @@ public class ObjectWindow {
                                     xc = xc-width;
                                 }
                             }					
-					// Check y boundary conditions.
-					if (yc<0) {
-						//System.out.print("Ymin ");
-						//System.out.print(x0); System.out.print(" "); System.out.print(y0);
-						//System.out.println();
-						if (!(symmetric)) {
-							fgarray[k]=bgValue;
-							k=k+1;
-							continue;
-						} else {
-							yc=height+yc;
-						}
-					} else if (yc >= height ) {
-						//System.out.print("Ymax yc=");System.out.print(yc);System.out.println();
-						//System.out.print(x0); System.out.print(" "); System.out.print(y0);
-						//System.out.println();
-						if (!(symmetric)) {
-							fgarray[k]=bgValue;
-							k=k+1;
-							continue;
-						} else {
-							yc=yc-height;
-						}
-					}
+                            // Check y boundary conditions.
+                            if (yc<0) {
+				//System.out.print("Ymin ");
+				//System.out.print(x0); System.out.print(" "); System.out.print(y0);
+				//System.out.println();
+                                if (!(symmetric)) {
+                                    fgarray[k]=bgValue;
+                                    k++;
+                                    continue;
+                                } else {
+                                    yc=height+yc;
+                                }
+                            } else if (yc >= height ) {
+				//System.out.print("Ymax yc=");System.out.print(yc);System.out.println();
+				//System.out.print(x0); System.out.print(" "); System.out.print(y0);
+				//System.out.println();
+				if (!(symmetric)) {
+                                    fgarray[k]=bgValue;
+                                    k++;
+                                    continue;
+				} else {
+                                    yc=yc-height;
+                                }
+                            }
 					
-					// Add this pixel to the result window.
-					fgarray[k]=imarray[xc][yc];
-					k=k+1;
-				}
-				
+                            // Add this pixel to the result window.
+                            fgarray[k]=imarray[xc][yc];
+                                k++;
+                            }	
 			}
-		}
-		return fgarray;	
-	}
+                    }
+                    return fgarray;	
+            }
 }
