@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Build: null
-Class-Path: eventbus-1.4.jar ij-1.52i.jar parsington-1.0.4.jar scijava
- -common-2.77.0.jar
-Created-By: MiniMaven
-

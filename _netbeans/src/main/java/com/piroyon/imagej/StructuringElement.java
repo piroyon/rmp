@@ -1,4 +1,4 @@
-package com.hiroyo.imagej;
+package com.piroyon.imagej;
 
 import ij.*;
 import ij.process.*;
@@ -17,19 +17,14 @@ import java.io.*;
  @version 0.1
  *
  */
-public final class StructuringElement{
+public final class StructuringElement {
 /*
  * Constants and properties.
  */
-	//public static final String CIRCLE = "circle";
-	public static final String SQUARE = "square";
-	public static final String RECT = "rect";
-	//public static final String RING = "ring";
-	public static final String LINE = "line";
-	private int bgValue = 255;
-
-	private ImagePlus seimp;
-	private ObjectWindow object;
+    private int bgValue = 255;
+    private static final String[] Items = {"From file","Set Square","Set Rect","Set Oval"};
+    ImagePlus seimp;
+    private ObjectWindow object;
 
 /*
  * Constructors!
@@ -39,34 +34,23 @@ public final class StructuringElement{
 	 * Structuring element with arbitrary shape: constructor takes ImagePlus which defines neighborhood with
 	 * black and white pixels.
 	 *
-	 @param seimp ImagePlus defining the structuring element.  Auto-thresholded so only maximum pixels (255) are
+	 @param imp ImagePlus defining the structuring element.  Auto-thresholded so only maximum pixels (255) are
 	           seen as white.
-	 *
 	 @param bgWhite Defines whether the background is white (true) or black (false).
 	 *
-	 @return A StructElement based on the structure.
-	 *
 	 */
-	public StructuringElement(ImagePlus seimp, boolean bgWhite) {
-            setBgWhite(bgWhite);
-            try {		
-		    // Ensure we have an image with odd width and height.
-    		if ( (seimp.getWidth() % 2 == 0) || (seimp.getHeight() % 2 == 0) ) {
-	    		throw new Exception("Structuring elements must have odd height and width");
-		}
-
+	public StructuringElement(ImagePlus imp, boolean bgWhite) {
+            setBgWhite(bgWhite);   
 		// Make our ImagePlus contents an 8-bit image.
 		//seproc = new ImagePlus("structuring element", seimp.getProcessor());
-		ImageConverter ic = new ImageConverter(seimp);
-		ic.convertToGray8();
-
+            ImageConverter ic = new ImageConverter(imp);
+            ic.convertToGray8();
+            imp.updateImage();
 		// Then threshold so only 255 pixels are white.  This 
 		// should already be the case, but let's make sure, shall we?
-		seimp.getProcessor().threshold(254);
-            }
-            catch(Exception e) {
-			//e.printStackTrace();
-            }
+            imp.getProcessor().threshold(254);
+            seimp = imp;
+         
 	}
 
 	/**
@@ -81,23 +65,22 @@ public final class StructuringElement{
 	 */
 	public StructuringElement(String name, int size, boolean bgWhite) {
 		setBgWhite(bgWhite);
-		try {
-
+                seimp = makeRect(size, size); 
 		    //if (name.equalsIgnoreCase(CIRCLE)) {
 			//    contents = makeCircle(size);
 		    //} else 
-                    if (name.equalsIgnoreCase(SQUARE)) {
-			    if (size % 2 == 0) {
-				    throw new Exception("Size of structuring element must be an odd number of pixels!");
-    			}
-	    		seimp = makeRect(size, size); 
-		    } else {
-			    throw new Exception("Unknown type of structuring element!");
-    		}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+                    //if (name.equalsIgnoreCase(Items[1])) {
+		//	    if (size % 2 == 0) {
+		//		    throw new Exception("Size of structuring element must be an odd number of pixels!");
+    		//	}
+	    	
+		//    } else {
+		//	    throw new Exception("Unknown type of structuring element!");
+    		//}
+		//}
+		//catch(Exception e) {
+		//	e.printStackTrace();
+		//}
 
 	}
 
@@ -112,53 +95,59 @@ public final class StructuringElement{
 	 *
 	 */
 	public StructuringElement(String name, int size1, int size2, boolean bgWhite) {
-		setBgWhite(bgWhite);
-		try {
+            setBgWhite(bgWhite);
+            //try {
             /*if (name.equalsIgnoreCase(RING)) {
                 contents = makeRing(size1, size2);
             } else*/
-            if (name.equalsIgnoreCase(RECT)) {
-                if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
-                    throw new Exception("Structuring elements must have odd-numbered height and width!");
-                }
-                seimp = makeRect(size1, size2); 
-            } else if (name.equalsIgnoreCase(LINE)) {
+            if (name.equalsIgnoreCase(Items[2])) {
+                    //if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
+                    //    throw new Exception("Structuring elements must have odd-numbered height and width!");
+                    //}
+                    seimp = makeRect(size1, size2); 
+                //
+            
+            } else if (name.equalsIgnoreCase(Items[3])) {
+                    //if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
+                    //    throw new Exception("Structuring elements must have odd-numbered height and width!");
+                    //}
+                seimp = makeOval(size1, size2); 
+                //} 
+                //else if (name.equalsIgnoreCase(LINE)) {
         
                 //	if (size1 % 2 == 0) {
                 //		throw new Exception("Size of structuring element must be an odd number of pixels!");
                 //	}
-                    seimp = makeLine(size1, size2); 
-            } else {
-                    throw new Exception("Unknown type of structuring element!");
-            }
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+                    //seimp = makeLine(size1, size2); 
+            } 
+            //else {
+            //        throw RuntimeException("Unknown type of structuring element!");
+            //    }
+            //}
+            //catch(Exception e) {
+		//e.printStackTrace();
+            //}
 	}
 
 
 /*
  * private parts of constructors: build new images.
  */
-	/*private ImagePlus makeCircle(int radius) {
-		ByteProcessor bp = new ByteProcessor(2*radius+1, 2*radius+1);
-		int width = 2*radius+1;
-		for (int x=-radius; x<=radius; x++) {
-			for (int y=-radius; y<=radius; y++) {
-				if (inRadius(radius,x,y)) {
-					bp.set(x+radius,y+radius,0);
-				} else {
-					bp.set(x+radius,y+radius,255);
-				}
-			}
-		}
+	//private ImagePlus makeCircle(int radius) {
+        private ImagePlus makeOval(int width, int height) {
+		//ByteProcessor bp = new ByteProcessor(2*radius+1, 2*radius+1);              
+                //int radius1, radius2;
+                ByteProcessor bp = new ByteProcessor(width, height);
+		int x = width/2 + 1;
+                int y = height/2 + 1;
+                bp.fillOval(x, y, width, height);
 		if (!(isBgWhite())) {
 			bp.invert();
 		}
-		ImagePlus result = new ImagePlus("circle structuring element", bp);
+		ImagePlus result = new ImagePlus("orval structuring element", bp);
+                //result.show();
 		return result;
-	}*/
+	}
 
 	private ImagePlus makeRect(int width, int height) {
 		ByteProcessor bp = new ByteProcessor(width, height);
@@ -174,7 +163,7 @@ public final class StructuringElement{
 		return result;
 	}
 
-	private ImagePlus makeLine(int length, int angle) {
+	/*private ImagePlus makeLine(int length, int angle) {
 		double radians = Math.PI/2 + angle*Math.PI/180.0;
 
 		// Produce a square ByteProcessor big enough to hold our line SE.
@@ -206,7 +195,7 @@ public final class StructuringElement{
 		}
 		ImagePlus result = new ImagePlus("rect structuring element", bp);
 		return result;
-	}
+	}*/
 
 	/*private ImagePlus makeRing(int inside, int outside) {
 		ByteProcessor bp = new ByteProcessor(2*outside+1, 2*outside+1);
@@ -237,6 +226,7 @@ public final class StructuringElement{
  */
 	/**
 	 * Is the background white?
+     * @return 
 	 */
 	public boolean isBgWhite() {
 		if (bgValue==255) {
@@ -361,6 +351,10 @@ public final class StructuringElement{
 		}
 		return false;
 	}
+
+    private Exception RuntimeException(String unknown_type_of_structuring_element) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
 
 /**
@@ -368,7 +362,6 @@ public final class StructuringElement{
  *
  @author Adam DeConinck
  @version 0.1
-
 class ObjectWindow {
 
 	private final int[][] se;

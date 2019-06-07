@@ -1,4 +1,4 @@
-package com.hiroyo.imagej;
+package com.piroyon.imagej;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -10,43 +10,19 @@ import ij.*;
 import ij.io.OpenDialog;
 import ij.process.*;
 import ij.measure.*;
+import ij.WindowManager;
 import java.awt.*;
 import java.awt.FlowLayout;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+//import java.awt.event.ActionListener;
+import java.util.Arrays;
+import static java.util.Objects.*;
 
-/**	This plugin performs rmp.
+/**	This plugin performs rmp... maybe
 	The plugin requires 8-bits binary images (Process/Binary/treshold)
         * 
-	The number of neighborhood  pixels (between 1 and 8) and itearatiosn (1-25) can be choosen at will.
-	The plugin corresponds to the Binary/Set Count option in NIH and Scion Image.
-
-	Erode - Removes pixels from the edges of objects in binary images, where contiguous black areas
-			in the image are considered objects, and background is assumed to be white.
-			A pixel is removed (set to white) if entered value or more of its eight neighbors are white.
-			Erosion separates objects that are touching and removes isolated pixels.
-
-	Dilate- Adds pixels to the edges of objects in binary images. A pixel is added (set to black)
-			if entered value or more of its eight neighbors are black.
-			Dilation connects discontinuous objects and fills in holes.
-
-	Open - 	Performs an erosion operation, followed by dilation, which smoothes objects and remove isolated pixels.
-
-	Close - Performs a dilation operation, followed by erosion, which smoothes objects and fill in small holes.
-
-	Set Count - Allows you to specify the number of adjacent background or foreground pixels necessary
-			before a pixel is removed from or added to the edge of objects during erosion or dilation operations.
-			The default is four.
-
-	Set Iterations - Allows you to specify the number of times erosion, dilation, opening, and closing are performed.
-			The default is one.
-
-	The plugin also writes results like number of pixels in the original image, new filtered image and residual image.
-	If required, the residual image containing the removed (erosion) or added (dilation) pixels is displayed.
-
-	Gary Chinga 	020726
-
+	@piroyon 2019
 */
 
 
@@ -55,6 +31,7 @@ public class Rmp_prototype implements PlugInFilter {
 	ImagePlus targetImp, impRemaining, impRemoved, seImp;
         ImageCanvas ic;
 	ImageStack imsRemoved;
+        int size1, size2;
 	int pixelCount,pixelThreshold,i,j,w,h;
 	int nIterations;
 	boolean canceled=false,dilate=false,display=false, displayRem=false,erode = false, open=false,close=false;
@@ -65,10 +42,10 @@ public class Rmp_prototype implements PlugInFilter {
 	int blackPixels, imageSize;
         private static String sename;
 
-	//private static final String[] items = {"Erode","Dilate","Open","Close"};
-        private static final String[] items = {"From file","Set Square","Set Rect","Set Oval"};
-	protected static final int ERODE=0,DILATE=1,OPEN=2,CLOSE=3;
-	protected static int Choice;
+        private static final String[] Items = {"From file","Set Square","Set Rect","Set Oval"};
+        //private static final String[] items = {"Erode","Dilate","Open","Close"};
+	//protected static final int SEfile=0,Square=1,Rect=2,Oval=3;
+	//protected static int Choice;
 
 	byte[] remain,remove,pixels,origPixels;
 	ByteProcessor ipRemoved;
@@ -84,24 +61,58 @@ public class Rmp_prototype implements PlugInFilter {
         @Override
 	public void run(ImageProcessor ip) {
                 //openSE();
-		String[] imageList = new String[1];
+		String[] imageList = new String[WindowManager.getImageCount()];
                 imageList[0] = targetImp.getTitle();
                 //imageList[1] = seImp.getTitle();
-		GenericDialog gd = getDetails(imageList);
+                GenericDialog gd = getDetails(imageList);
                 gd.showDialog();
                 if (gd.wasCanceled()) return;
-		//if(canceled) return;
-                //String objectName = gd.getNextChoice();
-		//String seName = gd.getNextChoice();
+                //targetImp = ij.WindowManager.getImage(gd.getNextChoice());
+                StructuringElement se;
 		boolean bgWhite = gd.getNextBoolean();
-
-		//ImagePlus object = ij.WindowManager.getImage(objectName);
-		//ImagePlus seImage = ij.WindowManager.getImage(seName);
-		StructuringElement se = new StructuringElement(seImp, bgWhite);
-                
+                int choice = Arrays.asList(Items).indexOf(gd.getNextRadioButton());
+                switch (choice) {
+                        case 0: //fromFile
+                            if (isNull(seImp)) {
+                                String seName = gd.getNextChoice();
+                                if (seName.equals(imageList[0])) {
+                                   IJ.error("ERROR: Target image and SE image are same.");
+                                   return;
+                                }
+                                seImp = ij.WindowManager.getImage(seName);
+                                seImp.show();
+                            }
+                            if ((!ckOdd((int)seImp.getWidth())) || (!ckOdd((int)seImp.getHeight()))) {
+                                return;
+                            }
+                            se = new StructuringElement(seImp, bgWhite);
+                            break;
+                        case 1:  //square
+                            size1 = (int)gd.getNextNumber();
+                            if (!ckOdd(size1)) {
+                                return;
+                            }
+                            se = new StructuringElement(Items[choice], size1, bgWhite);
+                            se.seimp.show();
+                            break;
+                        case 2:  //rect
+                        case 3:  //oval                           
+                            size1 = (int)gd.getNextNumber();
+                            size2 = (int)gd.getNextNumber();
+                            if ((!ckOdd(size1)) || (!ckOdd(size2))) {
+                                return;
+                            }
+                            se = new StructuringElement(Items[choice], size1, size2, bgWhite);
+                            se.seimp.show();
+                            break;
+                        default:
+                            return;
+                    }
+             
                 ImagePlus e = Morphology.open(targetImp,se);
                 e.show();
 		// Get information of Stack
+                
 		int nSlices = targetImp.getStackSize();
 		ImageStack stack = targetImp.getStack();
 		w = stack.getWidth();
@@ -128,7 +139,7 @@ public class Rmp_prototype implements PlugInFilter {
 			ByteProcessor ipRemain = new ByteProcessor(w,h);
 			remain = (byte[])ipRemain.getPixels();
 
-                    switch (Choice) {
+                    /*switch (Choice) {
                         case ERODE:
                             doFilter();
                             break;
@@ -163,7 +174,7 @@ public class Rmp_prototype implements PlugInFilter {
                             break;
                         default:
                             break;
-                    }
+                    }*/
 
 			// Put results in destination stack
 			ipRemain.setMinAndMax(0,0);
@@ -207,51 +218,57 @@ public class Rmp_prototype implements PlugInFilter {
 		if (displayRem) impRemoved.show();
 	}
         
+        //public StructuringElement makeSE() {
+          //  
+        //}
+        
         public void openSE () {
 		OpenDialog od = new OpenDialog("Select SE");
 		String directory = od.getDirectory();
 		String name = od.getFileName();
 		String path = directory + name;
 		seImp = IJ.openImage(path);
-                int setype = seImp.getType();
+                //int setype = seImp.getType();
 		seImp.show();
                 //ic = imp.getCanvas();  //ImageCanvasにImageを渡す
 	}
 
-	void showAbout() {
-		IJ.showMessage("About binary filter...",
-			"Blah\n" );
+	public void showAbout() {
+		IJ.showMessage("rmp prototype",
+			"test" );
 	}
 
-	private GenericDialog getDetails(String[] imageList){
+	private GenericDialog getDetails(String imageList[]){
             final GenericDialog gd;
             gd = new GenericDialog("rmp prototype...");
             final Panel pnl = new Panel(new FlowLayout());
-            final Button btn = new Button("Open Structuring Element..");
+            final Button btn = new Button("Open SE image file");
             pnl.add(btn);
-            btn.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    final OpenDialog od = new OpenDialog("Select SE");
-                    String directory = od.getDirectory();
-                    sename = od.getFileName();
-                    String path = directory + sename;
-                    seImp = IJ.openImage(path);
-                    seImp.show();
-                }
+            btn.addActionListener((final ActionEvent e) -> {
+                final OpenDialog od = new OpenDialog("Select SE");
+                //need canceling action
+                String directory = od.getDirectory();
+                sename = od.getFileName();
+                String path = directory + sename;
+                seImp = IJ.openImage(path);
+                seImp.show();
             });
-            gd.addChoice("Object Image:",imageList,imageList[0]);
-            gd.addRadioButtonGroup("Structuring Element", items, 1, 4, "From file");
+            gd.setInsets(5, 1, 10);
+            //gd.addChoice("Object Image:",imageList,imageList[0]);
+            gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
             gd.addPanel(pnl);
+            //gd.addToSameRow();
             //if(sename != null) {
              //   gd.addMessage(sename);
             //}
-            //gd.addChoice("From file...",imageList,imageList[1]);
-            gd.addNumericField("Size1 (Square or (Rect or Oval Side1)", 3, 0, 2, "px");
-            gd.addToSameRow();
-            gd.addNumericField("Size2 (Rect or Oval Side2)", 5, 0, 2, "px");
+            gd.addChoice("or Select SE from opened...",imageList,imageList[0]);
+            
+            gd.addNumericField("Size1: (SQUARE or (RECT or OVAL Side1)", 3, 0, 2, "px,");
+            //gd.addToSameRow();
+            gd.addNumericField("Size2: (RECT or OVAL Side2)", 7, 0, 2, "px");
             gd.addCheckbox("Background is white:",true);
-  
+            gd.setInsets(25,0,10);
+            gd.addNumericField("Number of rotations", 8, 0, 2, "");
 		/*return result;		
                 gd.addNumericField("Set count (1-8):",4,0);
 		gd.addNumericField("Iterations (1-25): ",1,0);
@@ -358,6 +375,20 @@ public class Rmp_prototype implements PlugInFilter {
 
 		}
 	}
+        
+        //public void ckOdd(int size) throws ApplicationException {
+        public boolean ckOdd(int size) {
+            switch(size % 2) {
+                case 0:
+                default:
+                    //throw new ApplicationException("Structuring elements must have odd height and width");
+                    IJ.error("Structuring elements must have odd height and width");
+                    return false;
+                case 1:
+                    return true;       
+            }
+	}
+        
         public static void main(String[] args) {
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
 		Class<?> clazz;

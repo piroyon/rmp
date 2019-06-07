@@ -1,4 +1,4 @@
-package com.hiroyo.imagej;
+package com.piroyon.imagej;
 
 import ij.*;
 import ij.process.*;
@@ -38,18 +38,17 @@ public class Morphology {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se,
-			double perc, boolean symmetric) {
+	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se, double perc, boolean symmetric) {
 
-		ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
-		ImagePlus out = new ImagePlus("percentile output", in.getProcessor().createImage() );
+		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
+		ImagePlus out = new ImagePlus("percentile output", imp.getProcessor().createImage() );
 		ImageProcessor op = out.getProcessor();
 
 		int width = out.getWidth();
 		int height = out.getHeight();
 
 		// Send image to structuring element for speed and set symmetry.
-		se.setObject(in, symmetric);
+		se.setObject(imp, symmetric);
 		for(int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
 				op.set(x,y, (int)Math.round(
