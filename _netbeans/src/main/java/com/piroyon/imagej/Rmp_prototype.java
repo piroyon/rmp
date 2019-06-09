@@ -31,13 +31,14 @@ public class Rmp_prototype implements PlugInFilter {
 	ImagePlus targetImp, impRemaining, impRemoved, seImp;
         ImageCanvas ic;
 	ImageStack imsRemoved;
-        int size1, size2;
+        int tg, bg, size1, size2;
 	int pixelCount,pixelThreshold,i,j,w,h;
-	int nIterations;
-	boolean canceled=false,dilate=false,display=false, displayRem=false,erode = false, open=false,close=false;
+	//int nIterations;
+	//boolean canceled=false,dilate=false,display=false, displayRem=false,erode = false, open=false,close=false;
 	ResultsTable rt = new ResultsTable();
 	int index,sum;
-	int p1,p2,p3,p4,p5,p6,p7,p8,p9;
+        boolean tiWhite, bgWhite;
+	//int p1,p2,p3,p4,p5,p6,p7,p8,p9;
 	int nRemoved,rPixels;
 	int blackPixels, imageSize;
         private static String sename;
@@ -69,7 +70,9 @@ public class Rmp_prototype implements PlugInFilter {
                 if (gd.wasCanceled()) return;
                 //targetImp = ij.WindowManager.getImage(gd.getNextChoice());
                 StructuringElement se;
-		boolean bgWhite = gd.getNextBoolean();
+                tiWhite = gd.getNextBoolean();
+                tg = tiWhite ? 255 : 0;
+		bgWhite = gd.getNextBoolean();
                 int choice = Arrays.asList(Items).indexOf(gd.getNextRadioButton());
                 switch (choice) {
                         case 0: //fromFile
@@ -81,6 +84,19 @@ public class Rmp_prototype implements PlugInFilter {
                                 }
                                 seImp = ij.WindowManager.getImage(seName);
                                 seImp.show();
+                            }
+                            if (seImp.getType() != 0) {
+                                IJ.error("The SE image must be a binary image.");
+                                return;
+                            }
+                            final int[][] searray = seImp.getProcessor().getIntArray();
+                            for (int x=0; x<seImp.getWidth(); x++) {
+                                for (int y=0; y<seImp.getHeight(); y++) {
+                                    if (searray[x][y]!=255 && searray[x][y]!=0) {
+					IJ.error("The SE image must be a binary(1-bit) image");
+                                        return;
+                                    }
+                                }
                             }
                             if ((!ckOdd((int)seImp.getWidth())) || (!ckOdd((int)seImp.getHeight()))) {
                                 return;
@@ -108,8 +124,8 @@ public class Rmp_prototype implements PlugInFilter {
                         default:
                             return;
                     }
-             
-                ImagePlus e = Morphology.open(targetImp,se);
+                Morphology2 mo = new Morphology2(targetImp, se, 255, tg);
+                ImagePlus e = mo.doFilter();
                 e.show();
 		// Get information of Stack
                 
@@ -121,7 +137,7 @@ public class Rmp_prototype implements PlugInFilter {
 
 		// Create new stack for output
 		ImageStack imsRemained = new ImageStack(w,h);
-		if (displayRem){imsRemoved = new ImageStack(w,h);}
+		//if (displayRem){imsRemoved = new ImageStack(w,h);}
 
 		// Go through the slices of input stack
 		for(i=0;i<nSlices;i++){
@@ -254,14 +270,14 @@ public class Rmp_prototype implements PlugInFilter {
                 seImp.show();
             });
             gd.setInsets(5, 1, 10);
-            //gd.addChoice("Object Image:",imageList,imageList[0]);
+            gd.addCheckbox("Target image's Background is white",false);
             gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
             gd.addPanel(pnl);
             gd.addChoice("or Select SE from opened...",imageList,imageList[0]);     
             gd.addNumericField("Size1: (SQUARE or (RECT or OVAL Side1)", 3, 0, 2, "px,");
             //gd.addToSameRow();
             gd.addNumericField("Size2: (RECT or OVAL Side2)", 7, 0, 2, "px");
-            gd.addCheckbox("Background is white:",true);
+            gd.addCheckbox("SE Background is white:",true);
             gd.setInsets(25,0,10);
             gd.addNumericField("Number of rotations", 8, 0, 2, "");
 		/*return result;		

@@ -20,10 +20,36 @@ import java.util.Arrays;
 public class Morphology2 {
         private final int[][] searray;
 	private final int[][] imarray;
-	int bgValue;
+	int bgValue, tgValue;
 	private final int sewidth, seheight, width, height, dx, dy;
+        private final ImagePlus targetImp;
         private int fgsize;
 	boolean symmetric;
+        
+        
+       public Morphology2(ImagePlus im, StructuringElement se, int bg, int tg) {
+                imarray = im.getProcessor().getIntArray();
+                searray = se.seimp.getProcessor().getIntArray();
+		bgValue = bg;
+                targetImp = im;
+                sewidth = se.seimp.getWidth(); 
+                seheight = se.seimp.getHeight();
+		width = im.getWidth(); 
+                height = im.getHeight();
+		dx = sewidth/2; // int division truncates
+		dy = seheight/2;
+		//symmetric = sym;
+                //int counter=0;             
+                //get the size of the structuring element's foreground in pixels.
+		for (int x=0; x<sewidth; x++) {
+			for (int y=0; y<seheight; y++) {
+				if (searray[x][y]!=bgValue) {
+					fgsize++;
+				}
+			}
+		}
+	}
+
 	/**
 	 * Percentile filter. Sets each pixel equal to the value of the pth
 	 * percentile of its neighborhood.  Neighborhood is defined using a 
@@ -41,55 +67,40 @@ public class Morphology2 {
 	 @param symmetric Determines whether the boundary conditions are symmetric, or padded with background.
 	 *
 	 @return An ImagePlus containing the filtered image.
-	 *
 	 */
-        public static ImagePlus doFilter(ImagePlus imp, StructuringElement se, boolean symmetric){
-		// Eroding
-                imarray = im.getProcessor().getIntArray();
-                searray = se.seimp.getProcessor().getIntArray();
-		for (j=0;j<nIterations;j++){
-                    for (int y=1; y<(h-1); y++) {
-			for (int x=1; x<(w-1); x++) {
-                            index=x+y*w;
-                            if(pixels[index] == 0){
-                            // Adding values around index
-                            p1=(pixels[index-w-1]&0xff); 	p2=(pixels[index-w]&0xff); 	p3=(pixels[index-w+1]&0xff);
-                            p4=(pixels[index-1]&0xff); 		p5=(pixels[index]&0xff);	p6=(pixels[index+1]&0xff);
-                            p7=(pixels[index+w-1]&0xff);	p8=(pixels[index+w]&0xff);	p9=(pixels[index+w+1]&0xff);
-                            sum =  p1 + p2 + p3 + p4 + p6 + p7 + p8+  p9;
-                            // Check if sum is higher than threshold
-                            if(sum >= pixelThreshold){remain[index] = (byte)255;}
-				else {remain[index]=0;}
-                            }
-				else {remain[index]=(byte)255;}
-                        }
-                    }
-                    //PASS THE VALUES IN REMAIN TO PIXELS FOR NEXT ITERATION
-                    for (int y=1; y<(h-1); y++) {
-				for (int x=1; x<(w-1); x++) {
-					index=x+y*w;
-					pixels[index]=remain[index];
-				}
-			}
-
-		}
-	}
         
-	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se, double perc, boolean symmetric) {
-
+	public ImagePlus doFilter() {
 		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
-		ImagePlus out = new ImagePlus("percentile output", imp.getProcessor().createImage() );
+		ImagePlus out = new ImagePlus("percentile output", targetImp.getProcessor().createImage() );
 		ImageProcessor op = out.getProcessor();
 
-		int width = out.getWidth();
-		int height = out.getHeight();
-                int dx = se.seimp.getWidth() / 2;
-                int dy = se.seimp.getHeight() / 2;
+		//int width = out.getWidth();
+		//int height = out.getHeight();
+                //int dx = se.seimp.getWidth() / 2;
+                //int dy = se.seimp.getHeight() / 2;
 		// Send image to structuring element for speed and set symmetry.
-		se.setObject(imp, symmetric);
+		//se.setObject(imp, symmetric);
+                int[][] a = new int[sewidth][seheight];
 		for(int x=0; x<width; x++) {
+                    if (x-dx<0 || x+dx>=width) { continue; }
                     for (int y=0; y<height; y++) {
-			op.set(x,y, (int)Math.round(percentile(se.window(x,y), perc)));
+                        if ( y-dy<0 || y+dy>=height) { continue; }
+                        for (int i = 0, j=x-dx; i < sewidth; i++, j++) {
+                            String ii = Integer.toString(i);
+                            String jj = Integer.toString(j);
+                            String xx = Integer.toString(x);
+                            String yy = Integer.toString(y);
+                            //IJ.showMessage(ii + " " + jj + " " +xx+ " " +yy);
+                            IJ.log(ii + " " + jj + " " +xx+ " " +yy);
+                            a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy);
+                            
+                        }
+                        int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
+                        String xx = Integer.toString(x);
+                        String yy = Integer.toString(y);
+                        String cc = Integer.toString(color);
+                        IJ.log(cc);
+			op.set(x,y, color);
 //			System.out.print(x);System.out.print(" ");System.out.print(y);System.out.println();
                     }
 		}
@@ -100,7 +111,7 @@ public class Morphology2 {
 	 * Assume symmetric bc if not supplied.
 	 *
 	 */
-	public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se,
+	/*public static ImagePlus percentileFilter(ImagePlus imp, StructuringElement se,
 			double perc) {
 		return percentileFilter(imp, se, perc, true);
 	}
@@ -126,7 +137,7 @@ public class Morphology2 {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus erode(ImagePlus imp, StructuringElement se) {
+	/*public static ImagePlus erode(ImagePlus imp, StructuringElement se) {
 		if (se.isBgWhite()) {
 			return percentileFilter(imp, se, 100.0);
 		} else {
@@ -156,7 +167,7 @@ public class Morphology2 {
 	 @return An ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus dilate(ImagePlus imp, StructuringElement se) {
+	/*public static ImagePlus dilate(ImagePlus imp, StructuringElement se) {
 		if (se.isBgWhite()) {
 			return percentileFilter(imp, se, 0.0);
 		} else {
@@ -169,8 +180,9 @@ public class Morphology2 {
 	 * by a dilation.
 	 *
 	 */
-	public static ImagePlus open(ImagePlus imp, StructuringElement se) {
-		return dilate( erode( imp, se ), se);
+	/*public static ImagePlus open(ImagePlus imp, StructuringElement se) {
+		//return dilate( erode( imp, se ), se);
+                return doFilter();
 	}
 
 	/**
@@ -178,7 +190,7 @@ public class Morphology2 {
 	 * an erosion.
 	 *
 	 */
-	public static ImagePlus close(ImagePlus imp, StructuringElement se) {
+	/*public static ImagePlus close(ImagePlus imp, StructuringElement se) {
 		return erode( dilate( imp, se), se );
 	}
 
@@ -186,7 +198,7 @@ public class Morphology2 {
 	 * Morphological gradient.  Difference between the dilation and the erosion.
 	 *
 	 */
-	public static ImagePlus gradient(ImagePlus imp, StructuringElement se) {
+	/*public static ImagePlus gradient(ImagePlus imp, StructuringElement se) {
 		ImagePlus d = dilate(imp,se);
 		ImagePlus e = erode(imp,se);
 
@@ -213,12 +225,12 @@ public class Morphology2 {
 	 @return ImagePlus containing the filtered image.
 	 *
 	 */
-	public static ImagePlus hitOrMiss(ImagePlus imp, 
+	/*public static ImagePlus hitOrMiss(ImagePlus imp, 
 			StructuringElement fse, StructuringElement bse) {
 
 		/* Note that both fg and bg are returned from erode, so are 
 		 * guaranteed to be 8-bit images with ByteProcessors. */
-		ImagePlus fg = erode(imp,fse);
+	/*	ImagePlus fg = erode(imp,fse);
 		imp.getProcessor().invert();
 		ImagePlus bg = erode( new ImagePlus( " ", imp.getProcessor() ), bse);
 
@@ -240,7 +252,7 @@ public class Morphology2 {
 	 * Black corresponds to difference between closing and image.
 	 *
 	 */
-	public static ImagePlus topHat(ImagePlus imp, StructuringElement se, boolean white) {
+	/*public static ImagePlus topHat(ImagePlus imp, StructuringElement se, boolean white) {
 
 		int width = imp.getWidth();
 		int height = imp.getHeight();

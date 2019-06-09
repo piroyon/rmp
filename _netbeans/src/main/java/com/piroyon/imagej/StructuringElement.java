@@ -40,15 +40,22 @@ public final class StructuringElement {
 	 *
 	 */
 	public StructuringElement(ImagePlus imp, boolean bgWhite) {
-            setBgWhite(bgWhite);   
+            if (!bgWhite) {
+                    //if (bgValue!=0) {
+                if (imp!=null) {
+                    imp.getProcessor().invert();
+                    imp.updateImage();
+                }
+            }
+            //setBgWhite(bgWhite);   
 		// Make our ImagePlus contents an 8-bit image.
 		//seproc = new ImagePlus("structuring element", seimp.getProcessor());
-            ImageConverter ic = new ImageConverter(imp);
-            ic.convertToGray8();
-            imp.updateImage();
+            //ImageConverter ic = new ImageConverter(imp);
+            //ic.convertToGray8();
+            
 		// Then threshold so only 255 pixels are white.  This 
 		// should already be the case, but let's make sure, shall we?
-            imp.getProcessor().threshold(254);
+            //imp.getProcessor().threshold(254);
             seimp = imp;
          
 	}
@@ -64,7 +71,7 @@ public final class StructuringElement {
 	 *
 	 */
 	public StructuringElement(String name, int size, boolean bgWhite) {
-		setBgWhite(bgWhite);
+		//setBgWhite(bgWhite);
                 seimp = makeRect(size, size); 
 		    //if (name.equalsIgnoreCase(CIRCLE)) {
 			//    contents = makeCircle(size);
@@ -95,7 +102,7 @@ public final class StructuringElement {
 	 *
 	 */
 	public StructuringElement(String name, int size1, int size2, boolean bgWhite) {
-            setBgWhite(bgWhite);
+            //setBgWhite(bgWhite);
             //try {
             /*if (name.equalsIgnoreCase(RING)) {
                 contents = makeRing(size1, size2);
@@ -137,14 +144,15 @@ public final class StructuringElement {
         private ImagePlus makeOval(int width, int height) {
 		//ByteProcessor bp = new ByteProcessor(2*radius+1, 2*radius+1);              
                 //int radius1, radius2;
-                ByteProcessor bp = new ByteProcessor(width, height);
+                ImageProcessor bp = new ByteProcessor(width, height);
 		int x = width/2 + 1;
                 int y = height/2 + 1;
+                //bp.fillOval(x, y, width, height);
                 bp.fillOval(x, y, width, height);
-		if (!(isBgWhite())) {
-			bp.invert();
-		}
-		ImagePlus result = new ImagePlus("orval structuring element", bp);
+		//if (!(isBgWhite())) {
+		//	bp.invert();
+		//}
+		ImagePlus result = new ImagePlus("oval SE", bp);
                 //result.show();
 		return result;
 	}
@@ -156,10 +164,10 @@ public final class StructuringElement {
 				bp.set(x,y,0);
 			}
 		}
-		if (!(isBgWhite())) {
-			bp.invert();
-		}
-		ImagePlus result = new ImagePlus("rect structuring element", bp);
+		//if (!(isBgWhite())) {
+		//	bp.invert();
+		//}
+		ImagePlus result = new ImagePlus("rect SE", bp);
 		return result;
 	}
 
@@ -240,11 +248,11 @@ public final class StructuringElement {
 	 */
 	public void setBgWhite(boolean bgWhite) {
 		if (!bgWhite) {
-                    if (bgValue!=0) {
+                    //if (bgValue!=0) {
                         if (seimp!=null) {
                             seimp.getProcessor().invert();
                         }
-                    }
+                    //}
                     bgValue=0;
                 } else {
                     if (bgValue!=255) {
