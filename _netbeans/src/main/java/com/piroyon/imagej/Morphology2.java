@@ -76,13 +76,15 @@ public class Morphology2 {
                 //int dy = se.seimp.getHeight() / 2;
 		// Send image to structuring element for speed and set symmetry.
 		//se.setObject(imp, symmetric);
-                int h = 0;
+                //int h = 0;
                 int[] c = new int[sewidth*seheight];
                 int[] b = new int[sewidth*seheight];
-                Arrays.parallelSetAll(b, i -> {
-                            return (b[i] / 255);
-                        });
+                for(int i = 0; sewidth>i; i++) {
+                    System.arraycopy(Arrays.copyOfRange(searray[i], 0, seheight),0,b,i*seheight,seheight);
+                }
+                Arrays.parallelSetAll(b, i -> { return (b[i] / 255); });
                 IJ.log(Arrays.toString(b));
+                IJ.log(Arrays.deepToString(searray));
                 int[][] a = new int[sewidth][seheight];
 		for(int x=0; x<width; x++) {
                     if (x-dx<0 || x+dx>=width) { continue; }
@@ -98,6 +100,7 @@ public class Morphology2 {
                             a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1);
                             //int[] aa = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1); 
                             //IJ.log(Arrays.toString(aa));
+                            
                             System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);
                             
                         }
@@ -107,6 +110,7 @@ public class Morphology2 {
                         int k = 0;
                         int res = 1;
                         int color = 0;
+                        //IJ.log(Integer.toString(tgValue));
                         for(int bb : b) {
                             res = (tgValue == 255) ? bb & c[k++] : bb ^ c[k++];
                             if (res == 0) {
@@ -118,7 +122,7 @@ public class Morphology2 {
                         String xx = Integer.toString(x);
                         String yy = Integer.toString(y);
                         String cc = Integer.toString(color);
-                        //J.log(Arrays.toString(c));
+                        //IJ.log(Arrays.toString(c));
 			op.set(x,y, color);
 //			System.out.print(x);System.out.print(" ");System.out.print(y);System.out.println();
                     }
