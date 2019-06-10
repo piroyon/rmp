@@ -124,12 +124,12 @@ public class Rmp_prototype implements PlugInFilter {
                         default:
                             return;
                     }
-                Morphology2 mo = new Morphology2(targetImp, se, 255, tg);
+                Morphology2 mo = new Morphology2(targetImp, se, tg);
                 ImagePlus e = mo.doFilter();
                 e.show();
 		// Get information of Stack
                 
-		int nSlices = targetImp.getStackSize();
+/*		int nSlices = targetImp.getStackSize();
 		ImageStack stack = targetImp.getStack();
 		w = stack.getWidth();
 		h = stack.getHeight();
@@ -193,7 +193,7 @@ public class Rmp_prototype implements PlugInFilter {
                     }*/
 
 			// Put results in destination stack
-			ipRemain.setMinAndMax(0,0);
+			/*ipRemain.setMinAndMax(0,0);
 			imsRemained.addSlice("Eroded image",ipRemain);
 
 
@@ -231,12 +231,9 @@ public class Rmp_prototype implements PlugInFilter {
 		if (displayRem) impRemoved.setStack(null,imsRemoved);
 
 		impRemaining.show();
-		if (displayRem) impRemoved.show();
+		if (displayRem) impRemoved.show();*/
 	}
-        
-        //public StructuringElement makeSE() {
-          //  
-        //}
+
         
         public void openSE () {
 		OpenDialog od = new OpenDialog("Select SE");
@@ -350,8 +347,6 @@ public class Rmp_prototype implements PlugInFilter {
 	}
 
 
-	
-        //public void ckOdd(int size) throws ApplicationException {
         public boolean ckOdd(int size) {
             switch(size % 2) {
                 case 0:
@@ -365,7 +360,7 @@ public class Rmp_prototype implements PlugInFilter {
 	}
         
         public static void main(String[] args) {
-		// set the plugins.dir property to make the plugin appear in the Plugins menu
+            // for netbeans run
 		Class<?> clazz;
                 clazz = Rmp_prototype.class;
 		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
@@ -379,7 +374,7 @@ public class Rmp_prototype implements PlugInFilter {
 		String name = od.getFileName();
 		String path = directory + name;
 		ImagePlus image = IJ.openImage(path);
-		 //open the Clown sample
+		//open the Clown sample
 		//ImagePlus image = IJ.openImage("http://imagej.net/images/clown.jpg");
 		image.show();
 

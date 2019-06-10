@@ -108,16 +108,10 @@ public final class StructuringElement {
                 contents = makeRing(size1, size2);
             } else*/
             if (name.equalsIgnoreCase(Items[2])) {
-                    //if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
-                    //    throw new Exception("Structuring elements must have odd-numbered height and width!");
-                    //}
-                    seimp = makeRect(size1, size2); 
+                seimp = makeRect(size1, size2); 
                 //
             
             } else if (name.equalsIgnoreCase(Items[3])) {
-                    //if ( (size1 % 2 == 0) || (size2 % 2 == 0) ) {
-                    //    throw new Exception("Structuring elements must have odd-numbered height and width!");
-                    //}
                 seimp = makeOval(size1, size2); 
                 //} 
                 //else if (name.equalsIgnoreCase(LINE)) {
@@ -144,26 +138,21 @@ public final class StructuringElement {
         private ImagePlus makeOval(int width, int height) {
 		//ByteProcessor bp = new ByteProcessor(2*radius+1, 2*radius+1);              
                 //int radius1, radius2;
-                ImageProcessor bp = new ByteProcessor(width, height);
+                ByteProcessor bp = new ByteProcessor(width, height);
 		int x = width/2 + 1;
                 int y = height/2 + 1;
-                //bp.fillOval(x, y, width, height);
-                bp.fillOval(x, y, width, height);
+                bp.setColor(255);
+                bp.fillOval(0, 0, width, height);
 		//if (!(isBgWhite())) {
-		//	bp.invert();
+		bp.invert();
 		//}
 		ImagePlus result = new ImagePlus("oval SE", bp);
-                //result.show();
 		return result;
 	}
 
 	private ImagePlus makeRect(int width, int height) {
 		ByteProcessor bp = new ByteProcessor(width, height);
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				bp.set(x,y,0);
-			}
-		}
+                bp.fillRect(0, 0, width, height);
 		//if (!(isBgWhite())) {
 		//	bp.invert();
 		//}

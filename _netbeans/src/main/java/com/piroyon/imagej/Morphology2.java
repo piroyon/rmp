@@ -2,7 +2,9 @@ package com.piroyon.imagej;
 
 import ij.*;
 import ij.process.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 //import org.ajdecon.morphology.StructuringElement;
 
 /**
@@ -18,22 +20,22 @@ import java.util.Arrays;
  *
  */
 public class Morphology2 {
-        private final int[][] searray;
-	private final int[][] imarray;
-	int bgValue, tgValue;
-	private final int sewidth, seheight, width, height, dx, dy;
+        private final int[][] searray, imarray;
+	//private final int[] searray2;
+	private final int tgValue, sewidth, seheight, width, height, dx, dy;
         private final ImagePlus targetImp;
         private int fgsize;
-	boolean symmetric;
+	//boolean symmetric;
         
         
-       public Morphology2(ImagePlus im, StructuringElement se, int bg, int tg) {
+       public Morphology2(ImagePlus im, StructuringElement se, int tg) {
                 imarray = im.getProcessor().getIntArray();
                 searray = se.seimp.getProcessor().getIntArray();
-		bgValue = bg;
+		tgValue = tg;
                 targetImp = im;
-                sewidth = se.seimp.getWidth(); 
+                sewidth = se.seimp.getWidth();
                 seheight = se.seimp.getHeight();
+                
 		width = im.getWidth(); 
                 height = im.getHeight();
 		dx = sewidth/2; // int division truncates
@@ -41,13 +43,7 @@ public class Morphology2 {
 		//symmetric = sym;
                 //int counter=0;             
                 //get the size of the structuring element's foreground in pixels.
-		for (int x=0; x<sewidth; x++) {
-			for (int y=0; y<seheight; y++) {
-				if (searray[x][y]!=bgValue) {
-					fgsize++;
-				}
-			}
-		}
+
 	}
 
 	/**
@@ -73,13 +69,20 @@ public class Morphology2 {
 		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
 		ImagePlus out = new ImagePlus("percentile output", targetImp.getProcessor().createImage() );
 		ImageProcessor op = out.getProcessor();
-
+                
 		//int width = out.getWidth();
 		//int height = out.getHeight();
                 //int dx = se.seimp.getWidth() / 2;
                 //int dy = se.seimp.getHeight() / 2;
 		// Send image to structuring element for speed and set symmetry.
 		//se.setObject(imp, symmetric);
+                int h = 0;
+                int[] c = new int[sewidth*seheight];
+                int[] b = new int[sewidth*seheight];
+                Arrays.parallelSetAll(b, i -> {
+                            return (b[i] / 255);
+                        });
+                IJ.log(Arrays.toString(b));
                 int[][] a = new int[sewidth][seheight];
 		for(int x=0; x<width; x++) {
                     if (x-dx<0 || x+dx>=width) { continue; }
@@ -90,16 +93,32 @@ public class Morphology2 {
                             String jj = Integer.toString(j);
                             String xx = Integer.toString(x);
                             String yy = Integer.toString(y);
-                            //IJ.showMessage(ii + " " + jj + " " +xx+ " " +yy);
-                            IJ.log(ii + " " + jj + " " +xx+ " " +yy);
-                            a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy);
+                            //IJ.log(Integer.toString(i*seheight));
+                            //IJ.log(ii + " " + jj + " " +xx+ " " +yy);
+                            a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1);
+                            //int[] aa = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1); 
+                            //IJ.log(Arrays.toString(aa));
+                            System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);
                             
                         }
-                        int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
+                        Arrays.parallelSetAll(c, i -> {
+                            return (c[i] / 255) ;
+                        });
+                        int k = 0;
+                        int res = 1;
+                        int color = 0;
+                        for(int bb : b) {
+                            res = (tgValue == 255) ? bb & c[k++] : bb ^ c[k++];
+                            if (res == 0) {
+                                color = 255;
+                                break;
+                            }
+                        }
+                        //int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
                         String xx = Integer.toString(x);
                         String yy = Integer.toString(y);
                         String cc = Integer.toString(color);
-                        IJ.log(cc);
+                        //J.log(Arrays.toString(c));
 			op.set(x,y, color);
 //			System.out.print(x);System.out.print(" ");System.out.print(y);System.out.println();
                     }
