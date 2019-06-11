@@ -22,20 +22,20 @@ import java.util.List;
 public class Morphology2 {
         private final int[][] searray, imarray;
 	//private final int[] searray2;
-	private final int tgValue, sewidth, seheight, width, height, dx, dy;
+	private final int tgValue, sewidth, seheight, width, height, dx, dy, choice;
         private final ImagePlus targetImp;
         private int fgsize;
 	//boolean symmetric;
         
         
-       public Morphology2(ImagePlus im, StructuringElement se, int tg) {
+       public Morphology2(ImagePlus im, StructuringElement se, int tg, int choi) {
                 imarray = im.getProcessor().getIntArray();
                 searray = se.seimp.getProcessor().getIntArray();
 		tgValue = tg;
                 targetImp = im;
                 sewidth = se.seimp.getWidth();
                 seheight = se.seimp.getHeight();
-                
+                choice = choi;
 		width = im.getWidth(); 
                 height = im.getHeight();
 		dx = sewidth/2; // int division truncates
@@ -64,72 +64,92 @@ public class Morphology2 {
 	 *
 	 @return An ImagePlus containing the filtered image.
 	 */
-        
-	public ImagePlus doFilter() {
+        public ImagePlus doFilter() {
+            
+        }
+	public ImagePlus doRmp(int mode) {
 		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
 		ImagePlus out = new ImagePlus("percentile output", targetImp.getProcessor().createImage() );
-		ImageProcessor op = out.getProcessor();
-                
-		//int width = out.getWidth();
-		//int height = out.getHeight();
-                //int dx = se.seimp.getWidth() / 2;
-                //int dy = se.seimp.getHeight() / 2;
-		// Send image to structuring element for speed and set symmetry.
-		//se.setObject(imp, symmetric);
-                //int h = 0;
-                int[] c = new int[sewidth*seheight];
+		ImageProcessor op = out.getProcessor();             
                 int[] b = new int[sewidth*seheight];
                 for(int i = 0; sewidth>i; i++) {
                     System.arraycopy(Arrays.copyOfRange(searray[i], 0, seheight),0,b,i*seheight,seheight);
                 }
                 Arrays.parallelSetAll(b, i -> { return (b[i] / 255); });
-                IJ.log(Arrays.toString(b));
-                IJ.log(Arrays.deepToString(searray));
-                int[][] a = new int[sewidth][seheight];
-		for(int x=0; x<width; x++) {
-                    if (x-dx<0 || x+dx>=width) { continue; }
+                
+                for(int x=0; x<width; x++) {
                     for (int y=0; y<height; y++) {
-                        if ( y-dy<0 || y+dy>=height) { continue; }
-                        for (int i = 0, j=x-dx; i < sewidth; i++, j++) {
-                            String ii = Integer.toString(i);
-                            String jj = Integer.toString(j);
-                            String xx = Integer.toString(x);
-                            String yy = Integer.toString(y);
-                            //IJ.log(Integer.toString(i*seheight));
-                            //IJ.log(ii + " " + jj + " " +xx+ " " +yy);
-                            a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1);
-                            //int[] aa = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1); 
-                            //IJ.log(Arrays.toString(aa));
-                            
-                            System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);
-                            
+                        if ( ((x-dx<0 || x+dx>=width)) || (y-dy<0 || y+dy>=height)) { 
+                            //op.set(x,y, 255);
+                            continue; 
+                           }
+                        int[] c = makeSubarray(x,y);
+                        int k = 0, color = 0;
+                        switch (choice) {
+                            case(1): //square
+                            case(2): //rect
+                                switch(tgValue) {
+                                    case(0): //black
+                                        if (Arrays.asList(c).contains(0)) color = 255;
+                                        break;
+                                    case(255): //white
+                                    default:
+                                        if (Arrays.asList(c).contains(1)) color = 255;
+                                        break;
+                                }
+                            case(3):  //oval
+                            case(0):  //file
+                            default:
+                                switch (tgValue) {
+                                    case(0):
+                                        for(int bb : b) {
+                                            //d[k] = bb ^ c[k++];
+                                            if ( bb == 0 && ((bb ^ c[k++]) == 0)) {
+                                                color = 255;
+                                                //IJ.log(Integer.toString(tgValue));
+                                                break;
+                                            }
+                                        }
+                                    break;
+                                    case(255):
+                                    default:
+                                        for(int bb : b) {
+                                            if (bb == 0 && ((bb & c[k++]) == 0)) {
+                                                color = 255;
+                                                break;
+                                            }
+                                        }
+                                    break;
+                                }
+                            break;
                         }
-                        Arrays.parallelSetAll(c, i -> {
-                            return (c[i] / 255) ;
-                        });
-                        int k = 0;
-                        int res = 1;
-                        int color = 0;
-                        //IJ.log(Integer.toString(tgValue));
-                        for(int bb : b) {
-                            res = (tgValue == 255) ? bb & c[k++] : bb ^ c[k++];
-                            if (res == 0) {
-                                color = 255;
-                                break;
-                            }
-                        }
+                        
                         //int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
                         String xx = Integer.toString(x);
                         String yy = Integer.toString(y);
                         String cc = Integer.toString(color);
+                        //IJ.log(Arrays.toString(b));
                         //IJ.log(Arrays.toString(c));
+                        //IJ.log(Arrays.toString(d));
 			op.set(x,y, color);
 //			System.out.print(x);System.out.print(" ");System.out.print(y);System.out.println();
                     }
-		}
-		return out;
-	}
+		
+                }
 
+		return out;
+            }
+
+
+        public int[] makeSubarray(int x, int y) {
+            int[] c = new int[sewidth*seheight];
+            for (int i = 0, j=x-dx; i < sewidth; i++, j++) {
+                System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);                           
+            }
+            //IJ.log(Arrays.toString(c));
+            Arrays.parallelSetAll(c, i -> { return (int)Math.ceil((c[i] / 255)); });
+            return c;
+        }
 	/**
 	 * Assume symmetric bc if not supplied.
 	 *
