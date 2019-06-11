@@ -125,7 +125,7 @@ public class Rmp_prototype implements PlugInFilter {
                             return;
                     }
                 Morphology2 mo = new Morphology2(targetImp, se, tg, choice);
-                ImagePlus e = mo.doFilter();
+                ImagePlus e = mo.doRmp();
                 e.show();
 		// Get information of Stack
                 
