@@ -9,7 +9,6 @@ import ij.process.ImageProcessor;
 import ij.*;
 import ij.io.OpenDialog;
 import ij.process.*;
-import ij.measure.*;
 import ij.WindowManager;
 import java.awt.*;
 import java.awt.FlowLayout;
@@ -31,11 +30,10 @@ public class Rmp_prototype implements PlugInFilter {
 	ImagePlus targetImp, impRemaining, impRemoved, seImp;
         ImageCanvas ic;
 	ImageStack imsRemoved;
-        int tg, bg, size1, size2;
-	int pixelCount,pixelThreshold,i,j,w,h;
+        int tg, bg, size1, size2, rotate;
 	//int nIterations;
 	//boolean canceled=false,dilate=false,display=false, displayRem=false,erode = false, open=false,close=false;
-	ResultsTable rt = new ResultsTable();
+	//ResultsTable rt = new ResultsTable();
 	int index,sum;
         boolean tiWhite, bgWhite;
 	//int p1,p2,p3,p4,p5,p6,p7,p8,p9;
@@ -44,11 +42,9 @@ public class Rmp_prototype implements PlugInFilter {
         private static String sename;
 
         private static final String[] Items = {"From file","Set Square","Set Rect","Set Oval"};
-        //private static final String[] items = {"Erode","Dilate","Open","Close"};
-	//protected static final int SEfile=0,Square=1,Rect=2,Oval=3;
-	//protected static int Choice;
 
-	byte[] remain,remove,pixels,origPixels;
+
+	//byte[] remain,remove,pixels,origPixels;
 	ByteProcessor ipRemoved;
 
         @Override
@@ -61,14 +57,11 @@ public class Rmp_prototype implements PlugInFilter {
 
         @Override
 	public void run(ImageProcessor ip) {
-                //openSE();
 		String[] imageList = new String[WindowManager.getImageCount()];
                 imageList[0] = targetImp.getTitle();
-                //imageList[1] = seImp.getTitle();
                 GenericDialog gd = getDetails(imageList);
                 gd.showDialog();
                 if (gd.wasCanceled()) return;
-                //targetImp = ij.WindowManager.getImage(gd.getNextChoice());
                 StructuringElement se;
                 tiWhite = gd.getNextBoolean();
                 tg = tiWhite ? 255 : 0;
@@ -124,8 +117,10 @@ public class Rmp_prototype implements PlugInFilter {
                         default:
                             return;
                     }
+                
                 Morphology2 mo = new Morphology2(targetImp, se, tg, choice);
                 ImagePlus e = mo.doRmp();
+                IJ.showStatus("wait");
                 e.show();
 		// Get information of Stack
                 
@@ -235,7 +230,7 @@ public class Rmp_prototype implements PlugInFilter {
 	}
 
         
-        public void openSE () {
+        /*public void openSE () {
 		OpenDialog od = new OpenDialog("Select SE");
 		String directory = od.getDirectory();
 		String name = od.getFileName();
@@ -244,7 +239,7 @@ public class Rmp_prototype implements PlugInFilter {
                 //int setype = seImp.getType();
 		seImp.show();
                 //ic = imp.getCanvas();  //ImageCanvasにImageを渡す
-	}
+	}*/
 
 	public void showAbout() {
 		IJ.showMessage("rmp prototype",
@@ -306,7 +301,7 @@ public class Rmp_prototype implements PlugInFilter {
             return gd;
     	}
 
-	void writeResults(){
+	/*void writeResults(){
 		//blackPixels=blackPixels/imageSize;
 		int fArea;
 		rt.incrementCounter();
@@ -344,7 +339,7 @@ public class Rmp_prototype implements PlugInFilter {
 			}
 		}
 
-	}
+	}*/
 
 
         public boolean ckOdd(int size) {

@@ -2,9 +2,9 @@ package com.piroyon.imagej;
 
 import ij.*;
 import ij.process.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import org.apache.commons.lang3.ArrayUtils;
+
 //import org.ajdecon.morphology.StructuringElement;
 
 /**
@@ -15,21 +15,18 @@ import java.util.List;
  * For more information on mathematical morphology: http://en.wikipedia.org/wiki/Mathematical_morphology
  * For ImageJ: http://rsbweb.nih.gov/ij/ 
  *
- @author Adam DeConinck
+ @author piroyon
  @version 0.1
  *
  */
 public class Morphology2 {
         private final int[][] searray;
-	//private final int[] searray2;
 	private final int tgValue, sewidth, seheight, width, height, dx, dy, choice;
         private final ImagePlus targetImp;
-        private int fgsize;
-	//boolean symmetric;
+        //private int fgsize;
         
         
        public Morphology2(ImagePlus im, StructuringElement se, int tg, int choi) {
-                //imarray = im.getProcessor().getIntArray();
                 searray = se.seimp.getProcessor().getIntArray();
 		tgValue = tg;
                 targetImp = im;
@@ -40,34 +37,20 @@ public class Morphology2 {
                 height = im.getHeight();
 		dx = sewidth/2; // int division truncates
 		dy = seheight/2;
-		//symmetric = sym;
-                //int counter=0;             
-                //get the size of the structuring element's foreground in pixels.
-
 	}
 
 	/**
-	 * Percentile filter. Sets each pixel equal to the value of the pth
-	 * percentile of its neighborhood.  Neighborhood is defined using a 
-	 * structuring element s.
-	 * <p>
-	 * This is the core functionality of most of the morphological 
-	 * operations, which at their core are rank-order filters.
-	 *
-	 @param imp   An ImagePlus object containing the image to be operated on.
-	 *
-	 @param se    StructuringElement containing the shape of the neighborhood.
-	 *
-	 @param perc Percentile to be used.
-	 *
-	 @param symmetric Determines whether the boundary conditions are symmetric, or padded with background.
-	 *
+	 * doFilter. 
+	 @param imp   An ImagePlus object containing the image to be operated on
+	 @param mode  0:erosion, 1:dilation
+	 @param bg    imp's back ground color (0 or 255)
+	 @param b     1-dim SE array
 	 @return An ImagePlus containing the filtered image.
-	 */
-        public ImagePlus doFilter(ImagePlus result, int mode, int bg, int[] b) {
-                ImagePlus out = new ImagePlus("filter output", result.getProcessor().createImage() );
+	 **/
+        public ImagePlus doFilter(ImagePlus imp, int mode, int bg, int[] b) {
+                ImagePlus out = new ImagePlus("filter output", imp.getProcessor().createImage() );
 		ImageProcessor op = out.getProcessor();
-                int [][] imarray = result.getProcessor().getIntArray();
+                int [][] imarray = imp.getProcessor().getIntArray();
                 for(int x=0; x<width; x++) {
                     for (int y=0; y<height; y++) {
                         if ( ((x-dx<0 || x+dx>=width)) || (y-dy<0 || y+dy>=height)) { 
@@ -80,21 +63,22 @@ public class Morphology2 {
                         }
                         Arrays.parallelSetAll(c, i -> { return (int)Math.ceil((c[i] / 255)); });
                         //IJ.log(Arrays.toString(c));
-                        int k = 0, color = 0;
+                        int k = 0, color=bg;
                         switch (choice) {
                             case(1): //square
                             case(2): //rect
                                 switch(bg) {
-                                    case(0): //black                                       
+                                    case(0): //black
                                         switch(mode) {                                            
                                             case(0): //erode                                               
                                             default:
                                                 //IJ.log(Arrays.toString(c));
-                                                if (Arrays.asList(c).contains(0)) color = 255;
+                                                if (ArrayUtils.contains(c, 0)) color = 255;
+                                                //IJ.log(Integer.toString(color));
                                                 break;
                                             case(1): //dilate
                                                 //IJ.log(Arrays.toString(c));
-                                                if (Arrays.asList(c).contains(1)) color = 255;
+                                                if (ArrayUtils.contains(c, 1)) color = 255;
                                                 break;
                                         }
                                     break;
@@ -103,17 +87,17 @@ public class Morphology2 {
                                         switch(mode) {
                                             case(0): //erode
                                             default:
-                                                if (Arrays.asList(c).contains(1)) color = 255;
+                                                if (ArrayUtils.contains(c, 1)) color = 0;
                                                 break;
                                             case(1): //dilate
-                                                if (Arrays.asList(c).contains(0)) color = 255;
+                                                if (ArrayUtils.contains(c, 0)) color = 0;
                                                 break;
                                         }                                       
                                     break;
                                 }
                             break;
-                            case(3):  //oval
-                            case(0):  //file
+                            case(3): //oval
+                            case(0): //fromfile
                             default:
                                 switch (bg) {
                                     case(0): //black
@@ -121,20 +105,16 @@ public class Morphology2 {
                                             case 0: //erode
                                             default:
                                                 for(int bb : b) {
-                                                    //d[k] = bb ^ c[k++];
                                                     if ( bb == 0 && ((bb ^ c[k++]) == 0)) {
                                                         color = 255;
-                                                        IJ.log(Integer.toString(tgValue));
                                                         break;
                                                     }
                                                 }
                                                 break;
                                             case 1: //dilate
                                                 for(int bb : b) {
-                                                    //d[k] = bb ^ c[k++];
                                                     if ( bb == 0 && ((bb ^ c[k++]) == 1)) {
                                                         color = 255;
-                                                        //IJ.log(Integer.toString(tgValue));
                                                         break;
                                                     }
                                                 }
@@ -147,7 +127,7 @@ public class Morphology2 {
                                             case 0: //erode
                                                 for(int bb : b) {
                                                     if (bb == 0 && ((bb & c[k++]) == 0)) {
-                                                        color = 255;
+                                                        color = 0;
                                                         break;
                                                     }
                                                 }
@@ -155,7 +135,7 @@ public class Morphology2 {
                                             case 1:  //dilate
                                                 for(int bb : b) {
                                                     if (bb == 0 && ((bb & c[k++]) == 1)) {
-                                                        color = 255;
+                                                        color = 0;
                                                         break;
                                                     }
                                                 }
@@ -167,9 +147,9 @@ public class Morphology2 {
                         }
                         
                         //int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
-                        String xx = Integer.toString(x);
-                        String yy = Integer.toString(y);
-                        String cc = Integer.toString(color);
+                        //String xx = Integer.toString(x);
+                        //String yy = Integer.toString(y);
+                        //String cc = Integer.toString(color);
                         //IJ.log(Arrays.toString(b));
                         //IJ.log(Arrays.toString(c));
                         //IJ.log(Arrays.toString(d));
@@ -183,31 +163,18 @@ public class Morphology2 {
         //public ImagePlus doRotate() {
             
         //}
+        
 	public ImagePlus doRmp() {
-                //ImagePlus result = new ImagePlus("filter output", targetImp.getProcessor().createImage() );
-		//ImagePlus in = new ImagePlus("percentile input", imp.getProcessor().convertToByte(true) );
-		//ImagePlus out = new ImagePlus("percentile output", targetImp.getProcessor().createImage() );
-		//ImageProcessor op = out.getProcessor();             
                 int[] b = new int[sewidth*seheight];
                 for(int i = 0; sewidth>i; i++) {
                     System.arraycopy(Arrays.copyOfRange(searray[i], 0, seheight),0,b,i*seheight,seheight);
                 }
                 Arrays.parallelSetAll(b, i -> { return (b[i] / 255); });
-                //ImagePlus opend = doFilter((doFilter(targetImp, 0, tgValue, b)), 1, 255, b);
-                ImagePlus opend = doFilter(targetImp, 0, tgValue, b);
+                ImagePlus opend = doFilter((doFilter(targetImp, 0, tgValue, b)), 1, 255, b);
+                //ImagePlus opend = doFilter(targetImp, 1, 255, b);
                 return opend;
         }
 
-
-        public int[] makeSubarray(int x, int y, int[][] imarray) {
-            int[] c = new int[sewidth*seheight];
-            for (int i = 0, j=x-dx; i < sewidth; i++, j++) {
-                System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);                           
-            }
-            //IJ.log(Arrays.toString(c));
-            Arrays.parallelSetAll(c, i -> { return (int)Math.ceil((c[i] / 255)); });
-            return c;
-        }
 	/**
 	 * Assume symmetric bc if not supplied.
 	 *
