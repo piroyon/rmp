@@ -30,12 +30,12 @@ public class Rmp_prototype implements PlugInFilter {
 	ImagePlus targetImp, impRemaining, impRemoved, seImp;
         ImageCanvas ic;
 	ImageStack imsRemoved;
-        int tg, bg, size1, size2, rotate;
+        int tg, choice, size1, size2, rotate;
 	//int nIterations;
 	//boolean canceled=false,dilate=false,display=false, displayRem=false,erode = false, open=false,close=false;
 	//ResultsTable rt = new ResultsTable();
 	int index,sum;
-        boolean tiWhite, bgWhite;
+        boolean bgWhite;
 	//int p1,p2,p3,p4,p5,p6,p7,p8,p9;
 	int nRemoved,rPixels;
 	int blackPixels, imageSize;
@@ -63,10 +63,9 @@ public class Rmp_prototype implements PlugInFilter {
                 gd.showDialog();
                 if (gd.wasCanceled()) return;
                 StructuringElement se;
-                tiWhite = gd.getNextBoolean();
-                tg = tiWhite ? 255 : 0;
+                tg = gd.getNextBoolean() ? 255 : 0;
 		bgWhite = gd.getNextBoolean();
-                int choice = Arrays.asList(Items).indexOf(gd.getNextRadioButton());
+                choice = Arrays.asList(Items).indexOf(gd.getNextRadioButton());
                 switch (choice) {
                         case 0: //fromFile
                             if (isNull(seImp)) {
@@ -101,7 +100,7 @@ public class Rmp_prototype implements PlugInFilter {
                             if (!ckOdd(size1)) {
                                 return;
                             }
-                            se = new StructuringElement(Items[choice], size1, bgWhite);
+                            se = new StructuringElement(Items[choice], size1);
                             se.seimp.show();
                             break;
                         case 2:  //rect
@@ -111,7 +110,7 @@ public class Rmp_prototype implements PlugInFilter {
                             if ((!ckOdd(size1)) || (!ckOdd(size2))) {
                                 return;
                             }
-                            se = new StructuringElement(Items[choice], size1, size2, bgWhite);
+                            se = new StructuringElement(Items[choice], size1, size2);
                             se.seimp.show();
                             break;
                         default:
@@ -264,6 +263,7 @@ public class Rmp_prototype implements PlugInFilter {
             gd.setInsets(5, 1, 10);
             gd.addCheckbox("Target image's Background is white",false);
             gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
+            //gd.addChoice("Structuring Element (SE):", Items, Items[0]);
             gd.addPanel(pnl);
             gd.addChoice("or Select SE from opened...",imageList,imageList[0]);     
             gd.addNumericField("Size1: (SQUARE or (RECT or OVAL Side1)", 3, 0, 2, "px,");

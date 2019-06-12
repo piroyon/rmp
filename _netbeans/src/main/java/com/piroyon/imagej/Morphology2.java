@@ -21,7 +21,7 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class Morphology2 {
         private final int[][] searray;
-	private final int tgValue, sewidth, seheight, width, height, dx, dy, choice;
+	private final int sewidth, seheight, width, height, dx, dy, tgValue, choice;
         private final ImagePlus targetImp;
         //private int fgsize;
         
@@ -42,14 +42,15 @@ public class Morphology2 {
 	/**
 	 * doFilter. 
 	 @param imp   An ImagePlus object containing the image to be operated on
-	 @param mode  0:erosion, 1:dilation
-	 @param bg    imp's back ground color (0 or 255)
+	 @param mode  f:erosion, t:dilation
+	 @param tg    imp's back ground color (0 or 255)
 	 @param b     1-dim SE array
 	 @return An ImagePlus containing the filtered image.
 	 **/
-        public ImagePlus doFilter(ImagePlus imp, int mode, int bg, int[] b) {
+        public ImagePlus doFilter(ImagePlus imp, boolean mode, int tg, int[] b) {
                 ImagePlus out = new ImagePlus("filter output", imp.getProcessor().createImage() );
-		ImageProcessor op = out.getProcessor();
+		//ByteProcessor op = out.getProcessor().convertToByteProcessor();
+                ImageProcessor op = out.getProcessor();
                 int [][] imarray = imp.getProcessor().getIntArray();
                 for(int x=0; x<width; x++) {
                     for (int y=0; y<height; y++) {
@@ -57,112 +58,88 @@ public class Morphology2 {
                             op.set(x,y, 255);
                             continue; 
                         }
+                        //int[][] a = new int[sewidth][seheight];
                         int[] c = new int[sewidth*seheight];
                         for (int i = 0, j=x-dx; i < sewidth; i++, j++) {
+                            //a[i] = Arrays.copyOfRange(imarray[j], y-dy, y+dy+1);
                             System.arraycopy((Arrays.copyOfRange(imarray[j], y-dy, y+dy+1)), 0, c, i*seheight, seheight);                           
                         }
-                        Arrays.parallelSetAll(c, i -> { return (int)Math.ceil((c[i] / 255)); });
-                        //IJ.log(Arrays.toString(c));
-                        int k = 0, color=bg;
+                        Arrays.parallelSetAll(c, i -> { return (int)Math.ceil((c[i] / 255)); });                        
+                        int k = 0, color = mode ? 255 : 0;
                         switch (choice) {
-                            case(1): //square
-                            case(2): //rect
-                                switch(bg) {
-                                    case(0): //black
-                                        switch(mode) {                                            
-                                            case(0): //erode                                               
-                                            default:
-                                                //IJ.log(Arrays.toString(c));
-                                                if (ArrayUtils.contains(c, 0)) color = 255;
-                                                //IJ.log(Integer.toString(color));
-                                                break;
-                                            case(1): //dilate
-                                                //IJ.log(Arrays.toString(c));
-                                                if (ArrayUtils.contains(c, 1)) color = 255;
-                                                break;
+                            case 1: //square
+                            case 2: //rect
+                                switch(tg) {
+                                    case 0: //white object on black
+                                        if (mode) { //dilate
+                                            //IJ.log(Arrays.toString(c));
+                                            if (ArrayUtils.contains(c, 1)) color = 0; //exist objcolor cell?
+                                        } else { //erode
+                                            IJ.log(Arrays.toString(c));
+                                            if (ArrayUtils.contains(c, 0)) color = 255; //exist bgcolor cell? 
                                         }
                                     break;
-                                    case(255): //white
+                                    case 255: //black obj on white
                                     default:
-                                        switch(mode) {
-                                            case(0): //erode
-                                            default:
-                                                if (ArrayUtils.contains(c, 1)) color = 0;
-                                                break;
-                                            case(1): //dilate
-                                                if (ArrayUtils.contains(c, 0)) color = 0;
-                                                break;
+                                        if (mode) { //dilate
+                                            if (ArrayUtils.contains(c, 0)) color = 0; //exist objcolor cell?
+                                        } else { //erode
+                                            if (ArrayUtils.contains(c, 1)) color = 255; //exist bgcolor cell?
                                         }                                       
                                     break;
                                 }
                             break;
-                            case(3): //oval
-                            case(0): //fromfile
+                            case 3: //oval
+                            case 0: //fromfile
                             default:
-                                switch (bg) {
-                                    case(0): //black
-                                        switch(mode) {
-                                            case 0: //erode
-                                            default:
-                                                for(int bb : b) {
-                                                    if ( bb == 0 && ((bb ^ c[k++]) == 0)) {
-                                                        color = 255;
-                                                        break;
-                                                    }
+                                switch (tg) {
+                                    case 0: //white object on black
+                                        if (mode) { //dilate
+                                            for(int bb : b) {
+                                                if ( bb == 0 && c[k++] == 1) {
+                                                    color = 0;
+                                                    break;
                                                 }
-                                                break;
-                                            case 1: //dilate
-                                                for(int bb : b) {
-                                                    if ( bb == 0 && ((bb ^ c[k++]) == 1)) {
-                                                        color = 255;
-                                                        break;
-                                                    }
+                                            }
+                                        } else { //erode
+                                            for(int bb : b) {
+                                                if ( bb == 0 && c[k++]== 0) {
+                                                    color = 255;
+                                                    break;
                                                 }
-                                                break;
+                                            }
                                         }
                                         break;
-                                    case(255): //white
+                                    case 255: //black obj on white
                                     default:
-                                        switch(mode) {                                        
-                                            case 0: //erode
-                                                for(int bb : b) {
-                                                    if (bb == 0 && ((bb & c[k++]) == 0)) {
-                                                        color = 0;
-                                                        break;
-                                                    }
+                                        if (mode) {   //dilate       
+                                            //IJ.log(Arrays.toString(c));
+                                            for(int bb : b) {
+                                                if (bb == 0 && c[k++] == 0) {
+                                                    color = 0;
+                                                    break;
+                                                } //IJ.log(Integer.toString(color));
+                                            }
+                                        } else {  //erode
+                                            for(int bb : b) {
+                                                if (bb == 0 && c[k++] == 1) {
+                                                    color = 255;
+                                                    break;
                                                 }
-                                                break;
-                                            case 1:  //dilate
-                                                for(int bb : b) {
-                                                    if (bb == 0 && ((bb & c[k++]) == 1)) {
-                                                        color = 0;
-                                                        break;
-                                                    }
-                                                }
-                                                break;
+                                            }
                                         }
-                                        break;
+                                    break;
                                 }
-                                break;
+                            break;
                         }
-                        
-                        //int color = (Arrays.deepEquals(a, searray)) ? 0 : 255;
-                        //String xx = Integer.toString(x);
-                        //String yy = Integer.toString(y);
-                        //String cc = Integer.toString(color);
-                        //IJ.log(Arrays.toString(b));
-                        //IJ.log(Arrays.toString(c));
-                        //IJ.log(Arrays.toString(d));
 			op.set(x,y, color);
-//			System.out.print(x);System.out.print(" ");System.out.print(y);System.out.println();
-                    }
-		
+                    }		
                 }
 		return out;
         }
-        //public ImagePlus doRotate() {
+        public ImagePlus doRotate() {
             
-        //}
+        }
         
 	public ImagePlus doRmp() {
                 int[] b = new int[sewidth*seheight];
@@ -170,9 +147,10 @@ public class Morphology2 {
                     System.arraycopy(Arrays.copyOfRange(searray[i], 0, seheight),0,b,i*seheight,seheight);
                 }
                 Arrays.parallelSetAll(b, i -> { return (b[i] / 255); });
-                ImagePlus opend = doFilter((doFilter(targetImp, 0, tgValue, b)), 1, 255, b);
-                //ImagePlus opend = doFilter(targetImp, 1, 255, b);
-                return opend;
+                return doFilter((doFilter(targetImp, false, tgValue, b)), true, 255, b);
+                //return doFilter(targetImp, false, tgValue, b);
+                //return doFilter(targetImp, true, tgValue, b);
+                //return opend;
         }
 
 	/**

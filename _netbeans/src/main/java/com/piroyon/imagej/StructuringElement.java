@@ -70,7 +70,7 @@ public final class StructuringElement {
 	 //@return Square or Circle StructElement.
 	 *
 	 */
-	public StructuringElement(String name, int size, boolean bgWhite) {
+	public StructuringElement(String name, int size) {
 		//setBgWhite(bgWhite);
                 seimp = makeRect(size, size); 
 		    //if (name.equalsIgnoreCase(CIRCLE)) {
@@ -101,7 +101,7 @@ public final class StructuringElement {
 	 @return A rectangular, ring-shaped or line-shaped structuring element.
 	 *
 	 */
-	public StructuringElement(String name, int size1, int size2, boolean bgWhite) {
+	public StructuringElement(String name, int size1, int size2) {
             //setBgWhite(bgWhite);
             //try {
             /*if (name.equalsIgnoreCase(RING)) {
@@ -139,8 +139,6 @@ public final class StructuringElement {
 		//ByteProcessor bp = new ByteProcessor(2*radius+1, 2*radius+1);              
                 //int radius1, radius2;
                 ByteProcessor bp = new ByteProcessor(width, height);
-		int x = width/2 + 1;
-                int y = height/2 + 1;
                 bp.setColor(255);
                 bp.fillOval(0, 0, width, height);
 		//if (!(isBgWhite())) {
