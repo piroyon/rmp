@@ -16,19 +16,20 @@ import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import static java.util.Objects.isNull;
 
-/**	This plugin performs rmp... maybe :P
-	The plugin requires 8-bits binary images (Process/Binary/treshold)
-        * 
-	@author piroyon 
+/**	This plugin performs rmp... maybe
+	* Thes plugin requires 8-bits binary images (Process/Binary/treshold)
+        * i'd like to dedicate this program to my dearist collaborators developing this algorithm
+        @author  hiroyo
+        @version 
         * 
 */
 
 
-public class Rmp_prototype implements PlugInFilter {
+public class Prototype implements PlugInFilter {
 
-	ImagePlus targetImp, seImp;
-        int choice, size1, size2, rotate;
-        boolean bgWhite, tgWhite;
+	private ImagePlus targetImp, seImp;
+        private static int choice, size1, size2, rotate, interpolationMethod;
+        private static boolean bgWhite, tgWhite;
         private static String sename;
         private static final String[] Items = {"From file","Set Square","Set Rect","Set Oval"};
 
@@ -54,10 +55,12 @@ public class Rmp_prototype implements PlugInFilter {
                 size1 = (int)gd.getNextNumber();
                 size2 = (int)gd.getNextNumber();
                 rotate = (int)gd.getNextNumber();
+                String seName = gd.getNextChoice();
+                interpolationMethod = gd.getNextChoiceIndex();
                 switch (choice) {
                         case 0: //fromFile
                             if (isNull(seImp)) {
-                                String seName = gd.getNextChoice();
+                                //String seName = gd.getNextChoice();
                                 if (seName.equals(imageList[0])) {
                                    IJ.error("ERROR: Target image and SE image are same.");
                                    return;
@@ -90,7 +93,7 @@ public class Rmp_prototype implements PlugInFilter {
                             break;
                         case 1:  //square
                             if (size1 == 0) {
-                                IJ.error("Input SE size1 > 0");
+                                IJ.error("Input SE height & width > 0");
                                 return;
                             }
                             if (!ckOdd(size1)) {
@@ -102,7 +105,7 @@ public class Rmp_prototype implements PlugInFilter {
                         case 2:  //rect
                         case 3:  //oval                           
                             if (size1 == 0 || size2 == 0) {
-                                IJ.error("Input SE size1 & size2 > 0");
+                                IJ.error("Input SE height & width > 0");
                                 return;
                             }
                             if ((!ckOdd(size1)) || (!ckOdd(size2))) {
@@ -116,17 +119,16 @@ public class Rmp_prototype implements PlugInFilter {
                             return;
                     }
 
-                Morphology21 mo = new Morphology21(targetImp, se, choice, rotate);
+                Execute_process mo = new Execute_process(targetImp, se, choice, rotate);
                 //
                 IJ.showStatus("Rotating and filtering "+Integer.toString(rotate)+" times...");
-                ImageStack rstack = mo.doRmp(tgWhite);
+                ImageStack rstack = mo.doRmp(tgWhite, interpolationMethod);
                 IJ.showStatus("Make Stack from "+Integer.toString(rotate)+" images...");
                 ImagePlus rotatedIP = new ImagePlus("rotate result", rstack);
                 rotatedIP.show();
                 IJ.showStatus("Calcurating maximum value...");
                 ImagePlus resultIP = new ImagePlus("result", mo.getMaxValue(rstack));
                 resultIP.show();
-                //ImagePlus rotatedIP = new ImagePlus("result", (mo.doRmp(tgWhite)));
                 
 
 	}
@@ -148,6 +150,7 @@ public class Rmp_prototype implements PlugInFilter {
 
 	private GenericDialog getDetails(String imageList[]){
             final GenericDialog gd;
+            final String[] methods = ImageProcessor.getInterpolationMethods();
             gd = new GenericDialog("rmp prototype...");
             final Panel pnl = new Panel(new FlowLayout());
             final Button btn = new Button("Open SE image file");
@@ -169,16 +172,16 @@ public class Rmp_prototype implements PlugInFilter {
             gd.setInsets(5, 1, 10);
             gd.addCheckbox("Target image's Background is white",false);
             gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
-            //gd.addChoice("Structuring Element (SE):", Items, Items[0]);
             gd.addPanel(pnl);
             gd.addChoice("or Select SE from opened...",imageList,imageList[0]);
             gd.addCheckbox("SE Background is white:",true);
             gd.setInsets(25,0,10);
             gd.addNumericField("Make SE Height:", 3, 0, 2, "px,");
             //gd.addToSameRow();
-            gd.addNumericField("Width:", 7, 0, 2, "px");        
+            gd.addNumericField("Width:", 3, 0, 2, "px");        
             gd.setInsets(25,0,10);
             gd.addNumericField("Number of rotations", 8, 0, 2, "");
+            gd.addChoice("Interpolation:", methods, methods[1]);
             return gd;
     	}
 
@@ -193,23 +196,24 @@ public class Rmp_prototype implements PlugInFilter {
             }
 	}
         
-        public static void main(String[] args) {
-            // for netbeans run
+      /* public static void main(String[] args) {   // to run on netbeans 
 		Class<?> clazz;
-                clazz = Rmp_prototype.class;
+                clazz = Prototype.class;
 		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+                
 		String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
+                
 		System.setProperty("plugins.dir", pluginsDir);
 
             // start ImageJ
                 final ImageJ imagej = new ImageJ();
+                IJ.showMessage(url);
+                IJ.showMessage(pluginsDir);
                 OpenDialog od = new OpenDialog("Select...", null);
                 String directory = od.getDirectory();
 		String name = od.getFileName();
 		String path = directory + name;
 		ImagePlus image = IJ.openImage(path);
-		//open the Clown sample
-		//ImagePlus image = IJ.openImage("http://imagej.net/images/clown.jpg");
                 try {
                     image.show();
                 } catch(NullPointerException e) {
@@ -217,6 +221,7 @@ public class Rmp_prototype implements PlugInFilter {
                 }
 
 		// run the plugin
-		IJ.runPlugIn(clazz.getName(), "Rmp_prototype");
-	}
+		IJ.runPlugIn(clazz.getName(), "Prototype");
+	}*/
+ 
 }

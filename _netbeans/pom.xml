@@ -13,16 +13,16 @@
 	</parent>
 
 	<groupId>com.piroyon</groupId>
-	<artifactId>Rmp_prototype</artifactId>
+	<artifactId>Prototype</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
 	<name>rmp_prototype</name>
 	<description>A Maven project implementing an ImageJ command.</description>
-	<url>https://mycompany.com/imagej/gauss-filtering/</url>
-	<inceptionYear>2017</inceptionYear>
+	<url>https://piroyon.com/imagej/rmp_prototype/</url>
+	<inceptionYear>2019</inceptionYear>
 	<organization>
 		<name>My Company</name>
-		<url>https://mycompany.com/</url>
+		<url>https://piroyon.com/</url>
 	</organization>
 	<licenses>
 		<license>
@@ -128,7 +128,6 @@
 	 <dependency>
 	  <groupId>org.apache.commons</groupId>
 	  <artifactId>commons-lang3</artifactId>
-	  <version>3.9</version>
 	  <type>jar</type>
 	 </dependency>
 	</dependencies>

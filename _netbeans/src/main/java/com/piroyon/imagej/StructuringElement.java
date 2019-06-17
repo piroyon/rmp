@@ -5,8 +5,9 @@ import ij.process.ByteProcessor;
 
 
 /**
- * StructuringElement. Implements a flat Structuring Element.
- @author piroyon
+ * StructuringElement. implements a flat Structuring Element.
+ * The type of argument determines the constructor.
+ @author  hiroyo
  @version
  **/
 
@@ -14,10 +15,11 @@ public final class StructuringElement {
     private int bgValue = 255;
     private static final String[] Items = {"From file","Set Square","Set Rect","Set Oval"};
     ImagePlus seimp;
-    private ObjectWindow object;
+    //private ObjectWindow object;
 
+    
 	/**
-         * From image file 
+         * Constructor1: From image file 
 	 @param imp      ImagePlus defining the structuring element.
 	 @param bgWhite  t:255, f:0
 	 **/
@@ -35,22 +37,16 @@ public final class StructuringElement {
 	}
 
 	/**
-         * make Square SE, require one size
+         * Constructor2: Make Square SE, require one size
 	 @param name     type
 	 @param size     width=height
 	 */
 	public StructuringElement(String name, int size) {
                 seimp = makeRect(size, size); 
-		    //if (name.equalsIgnoreCase(CIRCLE)) {
-			//    contents = makeCircle(size);
-		    //} else 
-                    //if (name.equalsIgnoreCase(Items[1])) {
-		//}
-
 	}
 
 	/**
-         * make Oval or Rect SE, reauire two sizes
+         * Constructor3: Make Oval or Rect SE, reauire two sizes
 	 @param name      type
 	 @param size1     width
 	 @param size2     height
@@ -63,7 +59,6 @@ public final class StructuringElement {
             } 
 	}
 
-	//private ImagePlus makeCircle(int radius) {}
         
         private ImagePlus makeOval(int width, int height) {
                 ByteProcessor bp = new ByteProcessor(width, height);
