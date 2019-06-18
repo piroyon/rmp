@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: inra.ijpb.morphology.geodrec.GeodesicReconstructionByDilation3DScanningGray8Test
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.917 s - in inra.ijpb.morphology.geodrec.GeodesicReconstructionByDilation3DScanningGray8Test

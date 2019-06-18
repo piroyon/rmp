@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: inra.ijpb.morphology.extrema.AllTests
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in inra.ijpb.morphology.extrema.AllTests

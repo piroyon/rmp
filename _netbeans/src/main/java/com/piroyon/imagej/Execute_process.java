@@ -30,7 +30,7 @@ public class Execute_process {
           @param cho  Selected SE's shape
           @param rt   #rotation
         **/
-       public Execute_process(ImagePlus im, StructuringElement se, int cho, int rt) {
+       public Execute_process(ImagePlus im, Structuring_Element se, int cho, int rt) {
                 searray = se.seimp.getProcessor().getIntArray();
                 targetImp = im;
                 sewidth = se.seimp.getWidth();

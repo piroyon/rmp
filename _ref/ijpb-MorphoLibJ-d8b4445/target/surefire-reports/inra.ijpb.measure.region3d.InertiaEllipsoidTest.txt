@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: inra.ijpb.measure.region3d.InertiaEllipsoidTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.379 s - in inra.ijpb.measure.region3d.InertiaEllipsoidTest
