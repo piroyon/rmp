@@ -196,7 +196,7 @@ public class NB_Prototype implements PlugInFilter {
             }
 	}
         
-    /*  public static void main(String[] args) {   // to run on netbeans 
+      public static void main(String[] args) {   // to run on netbeans 
 		Class<?> clazz;
                 clazz = NB_Prototype.class;
 		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
@@ -222,7 +222,7 @@ public class NB_Prototype implements PlugInFilter {
 
 		// run the plugin
 		IJ.runPlugIn(clazz.getName(), "Prototype");
-	}*/
+	}
 
  
 }

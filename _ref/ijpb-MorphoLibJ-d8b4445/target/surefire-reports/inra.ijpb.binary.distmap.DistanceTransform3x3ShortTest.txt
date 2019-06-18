@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: inra.ijpb.binary.distmap.DistanceTransform3x3ShortTest
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s - in inra.ijpb.binary.distmap.DistanceTransform3x3ShortTest

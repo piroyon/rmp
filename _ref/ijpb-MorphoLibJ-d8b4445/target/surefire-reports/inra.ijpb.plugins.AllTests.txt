@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: inra.ijpb.plugins.AllTests
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.361 s - in inra.ijpb.plugins.AllTests

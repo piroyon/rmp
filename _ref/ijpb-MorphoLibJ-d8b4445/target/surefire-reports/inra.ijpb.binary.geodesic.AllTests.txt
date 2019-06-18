@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: inra.ijpb.binary.geodesic.AllTests
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.104 s - in inra.ijpb.binary.geodesic.AllTests
