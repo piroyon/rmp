@@ -179,8 +179,9 @@ public class Execute_process {
                 out = null;  //need?
                 return rstack;
         }
-
-	private static double percentile(int[] values, double perc) {  //for gray scale..
+        
+        //for gray scale..
+	private static double percentile(int[] values, double perc) {  
 		Arrays.sort(values);
 
 		// n = rank of percentile value in the sorted array

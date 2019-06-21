@@ -17,7 +17,7 @@ import java.util.Arrays;
 import static java.util.Objects.isNull;
 
 /**	This plugin performs rmp... maybe
-	* Thes plugin requires 8-bits binary images (Process/Binary/treshold)
+	* Requirements: opend 8-bits binary images
         * i'd like to dedicate this program to my dearist collaborators developing this algorithm
         @author  hiroyo
         @version 
@@ -43,8 +43,15 @@ public class NB_Prototype implements PlugInFilter {
 
         @Override
 	public void run(ImageProcessor ip) {
-		String[] imageList = new String[WindowManager.getImageCount()];
-                imageList[0] = targetImp.getTitle();
+		//String[] imageList = new String[WindowManager.getImageCount()];
+                String[] imageList = WindowManager.getImageTitles();
+                String targetTitle = targetImp.getTitle();
+                int t = Arrays.asList(imageList).indexOf(targetTitle);
+                if (t != 0) {
+                    String anotherTitle = imageList[0];
+                    imageList[0] = targetTitle;
+                    imageList[t] = anotherTitle;
+                }
                 GenericDialog gd = getDetails(imageList);
                 gd.showDialog();
                 if (gd.wasCanceled()) return;
@@ -61,7 +68,7 @@ public class NB_Prototype implements PlugInFilter {
                         case 0: //fromFile
                             if (isNull(seImp)) {
                                 //String seName = gd.getNextChoice();
-                                if (seName.equals(imageList[0])) {
+                                if (seName.equals(targetTitle)) {
                                    IJ.error("ERROR: Target image and SE image are same.");
                                    return;
                                 }
@@ -128,8 +135,7 @@ public class NB_Prototype implements PlugInFilter {
                 rotatedIP.show();
                 IJ.showStatus("Calcurating maximum value...");
                 ImagePlus resultIP = new ImagePlus("result", mo.getMaxValue(rstack));
-                resultIP.show();
-                
+                resultIP.show();      
 
 	}
   
@@ -173,7 +179,8 @@ public class NB_Prototype implements PlugInFilter {
             gd.addCheckbox("Target image's Background is white",false);
             gd.addRadioButtonGroup("Structuring Element (SE):", Items, 1, 4, "From file");
             gd.addPanel(pnl);
-            gd.addChoice("or Select SE from opened...",imageList,imageList[0]);
+            gd.setInsets(0,25,10);
+            gd.addChoice("or Select SE from opened...",imageList,"");
             gd.addCheckbox("SE Background is white:",true);
             gd.setInsets(25,0,10);
             gd.addNumericField("Make SE Height:", 3, 0, 2, "px,");
@@ -207,8 +214,8 @@ public class NB_Prototype implements PlugInFilter {
 
             // start ImageJ
                 final ImageJ imagej = new ImageJ();
-                IJ.showMessage(url);
-                IJ.showMessage(pluginsDir);
+                //IJ.showMessage(url);
+                //IJ.showMessage(pluginsDir);
                 OpenDialog od = new OpenDialog("Select...", null);
                 String directory = od.getDirectory();
 		String name = od.getFileName();
