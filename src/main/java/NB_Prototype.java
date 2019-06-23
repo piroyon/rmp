@@ -214,8 +214,6 @@ public class NB_Prototype implements PlugInFilter {
 
             // start ImageJ
                 final ImageJ imagej = new ImageJ();
-                //IJ.showMessage(url);
-                //IJ.showMessage(pluginsDir);
                 OpenDialog od = new OpenDialog("Select...", null);
                 String directory = od.getDirectory();
 		String name = od.getFileName();
